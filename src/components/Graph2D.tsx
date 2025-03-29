@@ -5,6 +5,7 @@ import { useGraphRendering } from './2d/useGraphRendering'
 import { useGraphEvents } from './2d/useGraphEvents'
 import { type NodeType } from './types/graph'
 import { NodeForm } from '@/components/NodeForm.tsx'
+import Save from '@/lib/Save.ts'
 
 const Graph2D: FC = () => {
   const width = 800,
@@ -15,8 +16,16 @@ const Graph2D: FC = () => {
   const [currentNode, setCurrentNode] = useState<NodeType | null>(null)
 
   // Инициализация данных графа
-  const { graphData, setGraphData, saveData, updateLinks, deleteNode, addNode, editNode } =
-    useGraphData(width, height)
+  const {
+    graphData,
+    setGraphData,
+    saveData,
+    saveToFile,
+    updateLinks,
+    deleteNode,
+    addNode,
+    editNode,
+  } = useGraphData(width, height)
 
   // Настройка симуляции D3
   const simulationRef = useGraphSimulation(graphData, width, height)
@@ -38,11 +47,11 @@ const Graph2D: FC = () => {
 
     updateLinks(updatedData)
     setGraphData(updatedData)
-    saveData({ data: updatedData })
+    saveData(updatedData)
   }
 
   // Подписка на внешние события
-  useGraphEvents(updateGraph)
+  useGraphEvents(updateGraph, saveToFile)
 
   return (
     <>

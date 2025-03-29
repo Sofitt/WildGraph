@@ -45,7 +45,6 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       size: node ? node.size : 5,
     }
     onSave(updatedNode)
-    console.log('123')
     reset()
   }
 

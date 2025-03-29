@@ -9,7 +9,7 @@ export function useGraphRendering(
   width: number,
   height: number,
   setEditNode: (node: NodeType | null) => void,
-  saveData: (data?: { data?: GraphData; update?: boolean }) => void,
+  saveData: (data?: GraphData) => void,
 ) {
   useEffect(() => {
     if (!svgRef.current || !simulationRef.current) return
@@ -34,11 +34,12 @@ export function useGraphRendering(
       .enter()
       .append('circle')
       .attr('class', 'node')
-      .attr('r', (d) => 5 + (d.join ? d.join.length : 0))
+      .attr('r', (d) => d.size)
       .attr('fill', 'steelblue')
 
-    const labels = document.querySelectorAll('div[data-is-node-label=true]')
-    ;[...labels].forEach((label) => label.remove())
+    // const labels = document.querySelectorAll('div[data-is-node-label=true]')
+    // ;[...labels].forEach((label) => label.remove())
+
     // Создание текстовых меток
     const textElements = svg
       .selectAll('.nodelabel')

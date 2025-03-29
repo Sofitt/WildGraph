@@ -1,7 +1,9 @@
 import React from 'react'
+import Save from '@/lib/Save.ts'
 
 interface ControlPanelProps {
   toggle3D: () => void
+  saveToFile: () => void
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({ toggle3D }) => {
@@ -10,6 +12,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ toggle3D }) => {
       <div className='flex items-center gap-2'>
         <button onClick={toggle3D}>Переключить 3D режим</button>
         <button id='addNodeBtn'>Добавить узел</button>
+        <button id='saveToFileBtn'>Сохранить в файл</button>
       </div>
       <label className='inline-flex items-center justify-between'>
         <span>Сила отталкивания:</span>
