@@ -37,9 +37,6 @@ export function useGraphRendering(
       .attr('r', (d) => d.size)
       .attr('fill', 'steelblue')
 
-    // const labels = document.querySelectorAll('div[data-is-node-label=true]')
-    // ;[...labels].forEach((label) => label.remove())
-
     // Создание текстовых меток
     const textElements = svg
       .selectAll('.nodelabel')

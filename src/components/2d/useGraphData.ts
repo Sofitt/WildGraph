@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { GraphData, NodeType } from '../types/graph'
 import Save from '@/lib/Save.ts'
 
+export type UseGraphData = ReturnType<typeof useGraphData>
 export function useGraphData(width: number, height: number) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
 
@@ -36,6 +37,7 @@ export function useGraphData(width: number, height: number) {
   const addNode = (updatedNode: NodeType) => {
     updatedNode.x = width / 2
     updatedNode.y = height / 2
+    updatedNode.z = Math.random() * 200 - 100
     const newData = { ...graphData, nodes: [...graphData.nodes, updatedNode] }
     updateLinks(newData)
     setGraphData(newData)

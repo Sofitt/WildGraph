@@ -39,6 +39,7 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
     const updatedNode: NodeType = {
       x: node ? node.x : 0,
       y: node ? node.y : 0,
+      z: node ? node.z : 0,
       name: name.trim(),
       family: families,
       join: node ? node.join : [],
@@ -72,7 +73,7 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
         <div className='flex items-center gap-4 justify-self-end'>
           {mode === 'edit' && onDelete && node && (
             <button
-              className='bg-red-400'
+              className='!bg-red-300 hover:!bg-red-400'
               type='button'
               onClick={() => {
                 onDelete(node)

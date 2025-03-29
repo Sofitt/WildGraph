@@ -1,6 +1,7 @@
 export interface NodeType {
   x: number
   y: number
+  z: number
   fx?: number | null
   fy?: number | null
   name: string
@@ -9,7 +10,7 @@ export interface NodeType {
   size: number
 }
 
-export interface GraphData {
-  nodes: NodeType[]
+export interface GraphData<N = NodeType> {
+  nodes: N[]
   links: any[]
 }

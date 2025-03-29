@@ -1,9 +1,7 @@
 import React from 'react'
-import Save from '@/lib/Save.ts'
 
 interface ControlPanelProps {
   toggle3D: () => void
-  saveToFile: () => void
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({ toggle3D }) => {
