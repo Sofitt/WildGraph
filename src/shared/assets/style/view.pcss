@@ -1,0 +1,34 @@
+svg {
+  border: 1px solid #ccc;
+}
+.nodelabel {
+  pointer-events: none;
+  user-select: none;
+}
+.node {
+  cursor: pointer;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+.link {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+.highlight {
+  stroke: orange;
+  stroke-width: 3px;
+}
+.floating {
+  @apply bg-white p-4 border border-black border-solid rounded;
+}
+.modal {
+  position: absolute;
+  display: none;
+  top: 50px;
+  left: 50px;
+  z-index: 1000;
+}
+.control-panel {
+  position: absolute;
+  z-index: 1000;
+}
