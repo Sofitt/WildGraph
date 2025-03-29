@@ -57,7 +57,7 @@ const Graph3D: React.FC = () => {
     ;[...labels].forEach((label) => label.remove())
     const material = new THREE.MeshBasicMaterial({ color: THREE.Color.NAMES.red })
     nodes.forEach((n) => {
-      const geometry = new THREE.SphereGeometry(5 + (n.join ? n.join.length : 0), 16, 16)
+      const geometry = new THREE.SphereGeometry(n.size, 16, 16)
       const sphere = new THREE.Mesh(geometry, material)
       sphere.position.set(n.x, n.y, 0)
       n.mesh3D = sphere
@@ -70,6 +70,7 @@ const Graph3D: React.FC = () => {
       div.style.position = 'absolute'
       div.style.color = 'black'
       div.style.fontSize = '14px'
+      div.style.translate = '-50% 0'
       // Можно добавить небольшой сдвиг для красоты
       n.label3D = div
       containerRef.current?.appendChild(div)
@@ -112,7 +113,7 @@ const Graph3D: React.FC = () => {
             const screenX = (pos.x * 0.5 + 0.5) * width
             const screenY = (-pos.y * 0.5 + 0.5) * height
             // Небольшое смещение вниз (чтобы подпись была под сферой)
-            const offset = 10
+            const offset = n.size + 4
             n.label3D.style.left = `${screenX}px`
             n.label3D.style.top = `${screenY + offset}px`
           }

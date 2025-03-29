@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { GraphData, NodeType } from '../types/graph'
-import { saveDataFile } from '@/lib/saveDataFile.ts'
+import Save from '@/lib/Save.ts'
 
 export function useGraphData(width: number, height: number) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
@@ -26,8 +26,11 @@ export function useGraphData(width: number, height: number) {
     loadData()
   }, [width, height])
 
-  const saveData = (data?: { data?: GraphData; update?: boolean }) => {
-    saveDataFile(data?.data || graphData, data?.update)
+  const saveData = (data?: GraphData) => {
+    Save.toStorage(data || graphData)
+  }
+  const saveToFile = () => {
+    Save.toFile(graphData)
   }
 
   const addNode = (updatedNode: NodeType) => {
@@ -36,7 +39,7 @@ export function useGraphData(width: number, height: number) {
     const newData = { ...graphData, nodes: [...graphData.nodes, updatedNode] }
     updateLinks(newData)
     setGraphData(newData)
-    saveData({ data: newData, update: true })
+    saveData(newData)
   }
 
   const editNode = (updatedNode: NodeType) => {
@@ -44,7 +47,7 @@ export function useGraphData(width: number, height: number) {
     newData.nodes = newData.nodes.map((n) => (n.name === updatedNode.name ? updatedNode : n))
     updateLinks(newData)
     setGraphData(newData)
-    saveData({ data: newData, update: true })
+    saveData(newData)
   }
 
   const deleteNode = (nodeToDelete: NodeType) => {
@@ -52,14 +55,14 @@ export function useGraphData(width: number, height: number) {
     const newGraphData: GraphData = { nodes: newNodes, links: [] }
     updateLinks(newGraphData)
     setGraphData(newGraphData)
-    saveData({ data: newGraphData, update: true })
+    saveData(newGraphData)
   }
 
   // Обновление связей на основе семейств
   const updateLinks = (data: GraphData) => {
-    data.nodes.forEach((n) => (n.join = []))
     const links: any[] = []
     data.nodes.forEach((nodeI, i) => {
+      nodeI.join = []
       for (let j = i + 1; j < data.nodes.length; j++) {
         const nodeJ = data.nodes[j]
         const pairFamilies = nodeI.family.some((f) => nodeJ.family.includes(f))
@@ -69,6 +72,13 @@ export function useGraphData(width: number, height: number) {
         nodeJ.join.push(nodeI)
       }
     })
+    const maxJoin = Math.max(...data.nodes.map((n) => n.join.length))
+    const minSize = 5,
+      maxSize = 20
+    data.nodes.forEach((n) => {
+      // Если связей нет, оставляем минимальный размер, иначе масштабируем по количеству связей
+      n.size = maxJoin === 0 ? minSize : minSize + (n.join.length / maxJoin) * (maxSize - minSize)
+    })
     data.links = links
     return data
   }
@@ -77,6 +87,7 @@ export function useGraphData(width: number, height: number) {
     graphData,
     setGraphData,
     saveData,
+    saveToFile,
     editNode,
     addNode,
     deleteNode,

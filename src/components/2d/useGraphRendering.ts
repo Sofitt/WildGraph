@@ -48,7 +48,7 @@ export function useGraphRendering(
       .append('text')
       .attr('class', 'nodelabel')
       .attr('data-is-node-label', 'true')
-      .attr('dy', 4)
+      .attr('dy', (d) => d.size + 4)
       .attr('text-anchor', 'middle')
       .text((d) => d.name)
 
