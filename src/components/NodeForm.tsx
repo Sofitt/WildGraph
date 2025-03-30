@@ -42,8 +42,8 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     const localName = name?.trim()?.toLowerCase()
-    if (!localName || !family.trim()) {
-      alert('Название и семейство обязательны')
+    if (!localName) {
+      showNotification('Название обязательно')
       return
     }
     const families = family.split(' ').map((s) => s.trim().toLowerCase())
@@ -70,16 +70,7 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
   }
 
   return (
-    <div
-      className='modal floating'
-      style={{
-        display: 'grid',
-        position: 'absolute',
-        top: '16px',
-        left: '16px',
-        zIndex: 1000,
-      }}
-    >
+    <div className='floating grid'>
       <h3 className='mb-4'>{mode === 'add' ? 'Добавить узел' : 'Редактировать узел'}</h3>
       <form onSubmit={handleSubmit} className='grid gap-2'>
         <label className='inline-flex items-center gap-2 justify-between'>

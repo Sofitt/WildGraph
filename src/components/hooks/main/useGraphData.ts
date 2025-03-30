@@ -1,11 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
 import { useNodeAdapter } from '@/components/hooks/main/useNodeAdapter.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>
-export function useGraphData(width: number, height: number) {
+export function useGraphData() {
+  const width = window.innerWidth
+  const height = window.innerHeight
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
+
+  const familiesList = useMemo(() => {
+    return [...new Set(graphData.nodes.flatMap((node) => node.family))]
+  }, [graphData])
 
   // Загрузка данных из localStorage
   useEffect(() => {
@@ -89,6 +95,7 @@ export function useGraphData(width: number, height: number) {
 
   return {
     graphData,
+    familiesList,
     setGraphData,
     saveData,
     saveToFile,

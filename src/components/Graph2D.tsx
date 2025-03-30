@@ -7,11 +7,12 @@ import { type NodeType } from './types/graph'
 type Props = {
   onEditNode: (node: NodeType | null) => void
   graphUse: UseGraphData
+  searchQuery: string[]
 }
 
-const Graph2D: FC<Props> = ({ onEditNode, graphUse }) => {
-  const width = 800
-  const height = 600
+const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
+  const width = window.innerWidth
+  const height = window.innerHeight
 
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -23,7 +24,16 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse }) => {
     onEditNode(node)
   }
 
-  useGraphRendering(svgRef, simulationRef, graphData, width, height, handleEditNode, saveData)
+  useGraphRendering(
+    svgRef,
+    simulationRef,
+    graphData,
+    width,
+    height,
+    handleEditNode,
+    saveData,
+    searchQuery,
+  )
 
   return <svg ref={svgRef}></svg>
 }

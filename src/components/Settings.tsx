@@ -16,7 +16,7 @@ export const Settings = () => {
     set(key, value)
   }
   return (
-    <div className='absolute left-4 bottom-2 bg-white p-2 max-h-[400px] overflow-y-auto grid gap-2'>
+    <div className='z-[1] absolute left-4 bottom-2 bg-white p-2 max-h-[400px] overflow-y-auto grid gap-2'>
       <div className='p-2 border border-solid w-fit flex'>
         <span
           className='icon'

@@ -23,26 +23,39 @@ interface Link3D {
 interface Graph3DProps {
   graphUse: UseGraphData
   onEditNode: (node: Node3D) => void
+  searchQuery?: string[]
 }
 
-const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
+const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const width = 800
-  const height = 600
+  const width = window.innerWidth
+  const height = window.innerHeight
   const resolution = new THREE.Vector2(width, height)
   const { createThickLine } = useThickLine(resolution, 5)
+
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
+  const controlsRef = useRef<OrbitControls | null>(null)
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const sceneRef = useRef<THREE.Scene | null>(null)
+
+  const scene = new THREE.Scene()
+  sceneRef.current = scene
+
+  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
+  cameraRef.current = camera
+  const initialCameraPos = useRef<THREE.Vector3>(null)
+  const initialCameraTarget = useRef<THREE.Vector3>(null)
+
+  const renderer = new THREE.WebGLRenderer({ alpha: true })
+  renderer.setClearColor(0x000000, 0) // делаем фон прозрачным
+  renderer.setSize(width, height)
+  rendererRef.current = renderer
 
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.innerHTML = ''
     }
 
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
-    const renderer = new THREE.WebGLRenderer({ alpha: true })
-
-    renderer.setClearColor(0x000000, 0) // делаем фон прозрачным
-    renderer.setSize(width, height)
     if (containerRef.current) {
       containerRef.current.style.position = 'relative'
       containerRef.current.appendChild(renderer.domElement)
@@ -78,15 +91,34 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
 
     const useControls = () => {
       const controls = new OrbitControls(camera, renderer.domElement)
+      controlsRef.current = controls
       const centerX = mean(nodes, (n) => n.x) || 0
       const centerY = mean(nodes, (n) => n.y) || 0
-      const desiredZ = 300
-      camera.position.set(centerX, centerY, desiredZ)
-      controls.target.set(centerX, centerY, 0)
+      const desiredZ = +useGlobal().parse().DEFAULT_ZOOM_3D
+      if (!initialCameraPos.current || !initialCameraTarget.current) {
+        initialCameraPos.current = camera.position.set(centerX, centerY, desiredZ)
+        initialCameraTarget.current = controls.target.set(centerX, centerY, 0)
+      } else {
+        camera.position.copy(initialCameraPos.current)
+        controls.target.copy(initialCameraTarget.current)
+      }
       controls.update()
-      return { controls }
+
+      function resetCamera() {
+        if (!(initialCameraPos.current && initialCameraTarget.current)) return
+        camera.position.copy(initialCameraPos.current)
+        controls.target.copy(initialCameraTarget.current)
+        controls.update()
+        renderer.render(scene, camera)
+      }
+
+      return { controls, resetCamera }
     }
-    const { controls } = useControls()
+    const { controls, resetCamera } = useControls()
+
+    if (!searchQuery?.length) {
+      resetCamera()
+    }
 
     links.forEach((link) => {
       const points = [
@@ -175,10 +207,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         n.label3D.style.zIndex = `${zIndex}`
       })
     }
-
-    const render = () => {
-      renderer.render(scene, camera)
-      updateLabels()
+    const updateLines = () => {
       links.forEach((link) => {
         if (!(link.line3D && link.source.mesh3D && link.target.mesh3D)) return
 
@@ -194,6 +223,11 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         geometry.setPositions(newPositions)
         geometry.attributes.position.needsUpdate = true
       })
+    }
+
+    const render = () => {
+      updateLabels()
+      updateLines()
       renderer.render(scene, camera)
     }
 
@@ -210,6 +244,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
     renderer.domElement.addEventListener('mousemove', rendererMouseMove)
 
     controls.addEventListener('change', render)
+    render()
 
     return () => {
       renderer.domElement.removeEventListener('click', rendererClick)
@@ -223,7 +258,35 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         }
       })
     }
-  }, [onEditNode, graphUse.graphData])
+  }, [onEditNode, graphUse.graphData, createThickLine, searchQuery])
+
+  useEffect(() => {
+    if (
+      !searchQuery ||
+      !Array.isArray(searchQuery) ||
+      searchQuery.length === 0 ||
+      !cameraRef.current ||
+      !controlsRef.current ||
+      !sceneRef.current ||
+      !rendererRef.current
+    )
+      return
+
+    const nodes: Node3D[] = graphUse.graphData.nodes
+    const queries = searchQuery.map((q) => q.toLowerCase())
+
+    // Узел подходит, если для каждого запроса существует семейство, содержащее этот запрос
+    const targetNode = nodes.find((n) =>
+      queries.every((q) => n.family.some((f) => f.toLowerCase().includes(q))),
+    )
+
+    if (targetNode) {
+      cameraRef.current.position.set(targetNode.x, targetNode.y, targetNode.z + 200)
+      controlsRef.current.target.set(targetNode.x, targetNode.y, targetNode.z)
+      controlsRef.current.update()
+      rendererRef.current.render(sceneRef.current, cameraRef.current)
+    }
+  }, [searchQuery, graphUse.graphData])
 
   return (
     <div

@@ -10,17 +10,22 @@ export function useGraphRendering(
   height: number,
   setEditNode: (node: NodeType | null) => void,
   saveData: (data?: GraphData) => void,
+  searchQuery: string[],
 ) {
   useEffect(() => {
     if (!svgRef.current || !simulationRef.current) return
 
     const svg = d3.select(svgRef.current).attr('width', width).attr('height', height)
 
-    // Очистка существующих элементов
-    svg.selectAll('*').remove()
+    let group = svg.select<SVGGElement>('g#graphGroup')
+    if (group.empty()) {
+      group = svg.append('g').attr('id', 'graphGroup')
+    } else {
+      group.selectAll('*').remove()
+    }
 
     // Создание элементов связей
-    const linkElements = svg
+    const linkElements = group
       .selectAll('.link')
       .data(graphData.links)
       .enter()
@@ -28,7 +33,7 @@ export function useGraphRendering(
       .attr('class', 'link')
 
     // Создание элементов узлов
-    const nodeElements = svg
+    const nodeElements = group
       .selectAll('.node')
       .data(graphData.nodes)
       .enter()
@@ -38,7 +43,7 @@ export function useGraphRendering(
       .attr('fill', (d) => d.color)
 
     // Создание текстовых меток
-    const textElements = svg
+    const textElements = group
       .selectAll('.nodelabel')
       .data(graphData.nodes)
       .enter()
@@ -81,7 +86,6 @@ export function useGraphRendering(
       saveData()
     }
 
-    // Функции для hover
     const mouseOver = (_: any, d: NodeType) => {
       // @ts-ignore
       nodeElements.classed(
@@ -97,23 +101,47 @@ export function useGraphRendering(
       linkElements.classed('highlight', false)
     }
 
-    // Добавление обработчиков событий
     nodeElements
       // @ts-ignore
       .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended))
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
-      // @ts-ignore
-      .on('click', (event, d) => setEditNode(d), [])
+      .on('click', (_, d) => setEditNode(d))
 
-    // Установка функции tick для симуляции
     simulationRef.current.on('tick', ticked)
     simulationRef.current.on('end', ticked)
     simulationRef.current.alpha(1).restart()
 
     return () => {
-      // Очистка при размонтировании
       simulationRef.current!.on('tick', null)
+    }
+  }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData])
+
+  // Отдельный useEffect для обработки поиска и сброса трансформации группы:
+  useEffect(() => {
+    if (!svgRef.current) return
+
+    const svg = d3.select(svgRef.current)
+    const group = svg.select('g#graphGroup')
+    // Если нет поискового запроса, сбрасываем трансформацию
+    if (!searchQuery || (Array.isArray(searchQuery) && searchQuery.length === 0)) {
+      group.attr('transform', '')
+      return
+    }
+
+    const queries = (Array.isArray(searchQuery) ? searchQuery : [searchQuery]).map((q) =>
+      q.toLowerCase(),
+    )
+    const targetNode = graphData.nodes.find((n) =>
+      queries.every((q) => n.family.some((f) => f.toLowerCase().includes(q))),
+    )
+
+    if (targetNode) {
+      const translateX = width / 2 - targetNode.x
+      const translateY = height / 2 - targetNode.y
+      group.attr('transform', `translate(${translateX}, ${translateY})`)
+    } else {
+      group.attr('transform', '')
     }
   }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData])
 }
