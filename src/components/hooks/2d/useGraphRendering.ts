@@ -17,6 +17,21 @@ export function useGraphRendering(
 
     const svg = d3.select(svgRef.current).attr('width', width).attr('height', height)
 
+    const onResize = () => {
+      const newWidth = window.innerWidth
+      const newHeight = window.innerHeight
+      d3.select(svgRef.current).attr('width', newWidth).attr('height', newHeight)
+      const group = svgRef.current?.querySelector('g#graphGroup') as SVGGElement
+      if (group) {
+        // центрирование
+        const translateX = (newWidth - width) / 2
+        const translateY = (newHeight - height) / 2
+        group.setAttribute('transform', `translate(${translateX}, ${translateY})`)
+      }
+    }
+
+    window.addEventListener('resize', onResize)
+
     let group = svg.select<SVGGElement>('g#graphGroup')
     if (group.empty()) {
       group = svg.append('g').attr('id', 'graphGroup')
@@ -113,6 +128,7 @@ export function useGraphRendering(
     simulationRef.current.alpha(1).restart()
 
     return () => {
+      window.removeEventListener('resize', onResize)
       simulationRef.current!.on('tick', null)
     }
   }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData])

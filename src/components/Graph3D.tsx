@@ -28,9 +28,9 @@ interface Graph3DProps {
 
 const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const width = window.innerWidth
-  const height = window.innerHeight
-  const resolution = new THREE.Vector2(width, height)
+  const width = useRef(window.innerWidth)
+  const height = useRef(window.innerHeight)
+  const resolution = new THREE.Vector2(width.current, height.current)
   const { createThickLine } = useThickLine(resolution, 5)
 
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -41,14 +41,15 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
   const scene = new THREE.Scene()
   sceneRef.current = scene
 
-  const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
+  const camera = new THREE.PerspectiveCamera(75, width.current / height.current, 0.1, 1000)
+  camera.aspect = width.current / height.current
   cameraRef.current = camera
   const initialCameraPos = useRef<THREE.Vector3>(null)
   const initialCameraTarget = useRef<THREE.Vector3>(null)
 
   const renderer = new THREE.WebGLRenderer({ alpha: true })
   renderer.setClearColor(0x000000, 0) // делаем фон прозрачным
-  renderer.setSize(width, height)
+  renderer.setSize(width.current, height.current)
   rendererRef.current = renderer
 
   useEffect(() => {
@@ -115,6 +116,18 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
       return { controls, resetCamera }
     }
     const { controls, resetCamera } = useControls()
+
+    const onResize = () => {
+      width.current = window.innerWidth
+      height.current = window.innerHeight
+      camera.aspect = width.current / height.current
+      camera.updateProjectionMatrix()
+      renderer.setSize(width.current, height.current)
+      resolution.set(width.current, height.current)
+      render()
+    }
+
+    window.addEventListener('resize', onResize)
 
     if (!searchQuery?.length) {
       resetCamera()
@@ -190,9 +203,9 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
         const pos = new THREE.Vector3()
         n.mesh3D.getWorldPosition(pos)
         pos.project(camera)
-        const screenX = (pos.x * 0.5 + 0.5) * width
-        const screenY = (-pos.y * 0.5 + 0.5) * height
-        if (screenX < 0 || screenX > width || screenY < 0 || screenY > height) {
+        const screenX = (pos.x * 0.5 + 0.5) * width.current
+        const screenY = (-pos.y * 0.5 + 0.5) * height.current
+        if (screenX < 0 || screenX > width.current || screenY < 0 || screenY > height.current) {
           n.label3D.style.display = 'none'
           return
         }
@@ -247,6 +260,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
     render()
 
     return () => {
+      window.removeEventListener('resize', onResize)
       renderer.domElement.removeEventListener('click', rendererClick)
       renderer.domElement.removeEventListener('mousemove', rendererMouseMove)
       if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
@@ -294,8 +308,8 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
       ref={containerRef}
       style={{
         display: 'block',
-        width: `${width}px`,
-        height: `${height}px`,
+        width: `${width.current}px`,
+        height: `${height.current}px`,
         position: 'relative',
         overflow: 'hidden',
       }}
