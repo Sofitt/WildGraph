@@ -6,7 +6,7 @@ interface ControlPanelProps {
 
 const ControlPanel: React.FC<ControlPanelProps> = ({ toggle3D }) => {
   return (
-    <div className='control-panel grid gap-4 right-0 floating'>
+    <div className='control-panel grid gap-4 right-4 top-4 floating'>
       <div className='flex items-center gap-2'>
         <button onClick={toggle3D}>Переключить 3D режим</button>
         <button id='addNodeBtn'>Добавить узел</button>

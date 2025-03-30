@@ -18,7 +18,7 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
   useEffect(() => {
     if (node) {
       setName(node.name)
-      setFamily(node.family.join(', '))
+      setFamily(node.family.join(' '))
       setColor(node.color || '#ff0000')
     } else {
       setName('')
@@ -36,19 +36,22 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !family.trim()) {
+    const localName = name.trim()
+    if (!localName || !family.trim()) {
       alert('Название и семейство обязательны')
       return
     }
-    const families = family.split(',').map((s) => s.trim().toLowerCase())
-    // Для нового узла задаем x,y = 0; их можно переопределить позже в родительском компоненте
+    const families = family.split(' ').map((s) => s.trim().toLowerCase())
+    if (!localName.includes(' ')) {
+      families.unshift(localName.toLowerCase())
+    }
     const updatedNode: NodeType = {
       x: node ? node.x : 0,
       y: node ? node.y : 0,
       z: node ? node.z : 0,
       join: node ? node.join : [],
       size: node ? node.size : 5,
-      name: name.trim(),
+      name: localName,
       family: families,
       color,
     }
@@ -62,15 +65,27 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       style={{
         display: 'grid',
         position: 'absolute',
-        top: '50px',
-        left: '50px',
+        top: '16px',
+        left: '16px',
         zIndex: 1000,
       }}
     >
-      <h3>{mode === 'add' ? 'Добавить узел' : 'Редактировать узел'}</h3>
+      <h3 className='mb-4'>{mode === 'add' ? 'Добавить узел' : 'Редактировать узел'}</h3>
       <form onSubmit={handleSubmit} className='grid gap-2'>
         <label className='inline-flex items-center gap-2 justify-between'>
-          <span>Название:</span>
+          <span className='inline-flex items-center'>
+            <span
+              className='icon mr-2'
+              style={
+                {
+                  '--icon-symbol': '"?"',
+                  '--icon-content':
+                    '"Если название будет из одного слова, то оно добавится в семейства"',
+                } as object
+              }
+            />
+            Название:
+          </span>
           <input
             ref={firstField}
             type='text'
@@ -79,8 +94,25 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
           />
         </label>
         <label className='inline-flex items-center gap-2 justify-between'>
-          <span>Семейства (через запятую):</span>
-          <input type='text' value={family} onChange={(e) => setFamily(e.target.value)} />
+          <span className='inline-flex items-center'>
+            <span
+              className='icon mr-2'
+              style={
+                {
+                  '--icon-symbol': '"?"',
+                  '--icon-content':
+                    '"Если семейство составное (2 и более слов), тогда вместо пробелов использовать `_`. Для разделения семейств, используется пробел. Пример: стальная_воля воля металл"',
+                } as object
+              }
+            />
+            Семейства:
+          </span>
+          <input
+            type='text'
+            value={family}
+            placeholder='новый_узел узел'
+            onChange={(e) => setFamily(e.target.value)}
+          />
         </label>
         <label className='inline-flex items-center gap-2 justify-between'>
           <span>Цвет:</span>
