@@ -2,6 +2,7 @@ import { NodeType } from '@/components/types/graph.ts'
 
 export const useNodeAdapter = (node: Partial<NodeType>) => {
   const template: NodeType = {
+    id: +new Date(),
     x: 0,
     y: 0,
     z: 0,

@@ -1,6 +1,8 @@
 :root {
   --icon-symbol: '?';
   --icon-content: 'текст';
+  --icon-offsetX: -2px;
+  --icon-offsetY: -2px;
 }
 
 svg {
@@ -48,10 +50,10 @@ svg {
     text-align: center;
   }
   &::after {
-    @apply z-[1] absolute w-[240px] h-[100px] overflow-y-auto p-2 border border-solid border-black rounded bg-white;
+    @apply z-[1] absolute w-[240px] overflow-y-auto p-2 border border-solid border-black rounded bg-white;
     display: none;
     content: var(--icon-content);
     line-height: 1.3;
-    translate: -2px -2px;
+    translate: var(--icon-offsetX) var(--icon-offsetY);
   }
 }

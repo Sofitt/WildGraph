@@ -1,4 +1,5 @@
 export interface NodeType {
+  id: number
   x: number
   y: number
   z: number

@@ -1,5 +1,5 @@
 import { type FC, type FormEvent, useState, useEffect, useRef } from 'react'
-import type { NodeType } from '@/components/types/graph.ts'
+import type { GraphData, NodeType } from '@/components/types/graph.ts'
 import { showNotification } from '@/lib/showNotification.ts'
 
 interface NodeFormProps {
@@ -8,9 +8,17 @@ interface NodeFormProps {
   onSave: (node: NodeType) => void
   onClose: () => void
   onDelete?: (node: NodeType) => void
+  graphData: GraphData
 }
 
-export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDelete }) => {
+export const NodeForm: FC<NodeFormProps> = ({
+  graphData,
+  node,
+  mode,
+  onSave,
+  onClose,
+  onDelete,
+}) => {
   const [name, setName] = useState<string>('')
   const [family, setFamily] = useState<string>('')
   const [note, setNote] = useState<string>('')
@@ -50,7 +58,15 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
     if (!localName.includes(' ') && !families.includes(localName)) {
       families.unshift(localName)
     }
+
+    let id
+    if (mode === 'add') {
+      id = graphData.nodes.length ? Math.max(...graphData.nodes.map((node) => node.id)) + 1 : 1
+    } else {
+      id = (node as NodeType).id
+    }
     const updatedNode: NodeType = {
+      id,
       x: node ? node.x : 0,
       y: node ? node.y : 0,
       z: node ? node.z : 0,
@@ -61,6 +77,7 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       notes: note.trim().split('\n'),
       color,
     }
+
     onSave(updatedNode)
     if (mode === 'add') {
       reset()

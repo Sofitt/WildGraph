@@ -173,7 +173,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
             const material = link?.line3D?.material as LineMaterial
             if (!material) return
 
-            if (link.source.name === hoveredNode.name || link.target.name === hoveredNode.name) {
+            if (link.source.id === hoveredNode.id || link.target.id === hoveredNode.id) {
               material.color.set(0xffa500)
             } else {
               material.color.set(0x999999)

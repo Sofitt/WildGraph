@@ -1,6 +1,11 @@
-import { FC, FormEvent, useState } from 'react'
+import { type FC, type FormEvent, useState } from 'react'
 
-export const SearchBar: FC<{ emitter: (data: string[]) => void }> = ({ emitter }) => {
+interface Props {
+  emitter: (data: string[]) => void
+  className?: string
+}
+
+export const SearchBar: FC<Props> = ({ emitter, className = '' }) => {
   const [search, setSearch] = useState('')
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -11,11 +16,14 @@ export const SearchBar: FC<{ emitter: (data: string[]) => void }> = ({ emitter }
     emitter(search.split(' '))
   }
   return (
-    <div className='z-[1] absolute top-4 left-1/2 -translate-x-1/2 bg-white p-2 flex gap-2 items-center'>
+    <div className={`z-[1]  bg-white flex gap-2 items-center ${className}`}>
       <button onClick={reset}>❌</button>
-      <form className='flex gap-4 items-center' onSubmit={onSubmit}>
+      <form className='flex gap-2 items-center' onSubmit={onSubmit}>
         <input type='text' value={search} onChange={(e) => setSearch(e.target.value)} />
-        <button type='submit'>Искать</button>
+        <button type='submit'>
+          <span className='max-2xl:hidden'>Искать</span>
+          <span className='2xl:hidden'>🔎</span>
+        </button>
       </form>
     </div>
   )

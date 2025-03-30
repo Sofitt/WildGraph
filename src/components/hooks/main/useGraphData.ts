@@ -9,7 +9,7 @@ export function useGraphData() {
   const height = window.innerHeight
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
 
-  const familiesList = useMemo(() => {
+  const familyList = useMemo(() => {
     return [...new Set(graphData.nodes.flatMap((node) => node.family))]
   }, [graphData])
 
@@ -54,14 +54,14 @@ export function useGraphData() {
 
   const editNode = (updatedNode: NodeType) => {
     const newData = { ...graphData }
-    newData.nodes = newData.nodes.map((n) => (n.name === updatedNode.name ? updatedNode : n))
+    newData.nodes = newData.nodes.map((n) => (n.id === updatedNode.id ? updatedNode : n))
     updateLinks(newData)
     setGraphData(newData)
     saveData(newData)
   }
 
   const deleteNode = (nodeToDelete: NodeType) => {
-    const newNodes = graphData.nodes.filter((n) => n.name !== nodeToDelete.name)
+    const newNodes = graphData.nodes.filter((n) => n.id !== nodeToDelete.id)
     const newGraphData: GraphData = { nodes: newNodes, links: [] }
     updateLinks(newGraphData)
     setGraphData(newGraphData)
@@ -95,7 +95,7 @@ export function useGraphData() {
 
   return {
     graphData,
-    familiesList,
+    familyList,
     setGraphData,
     saveData,
     saveToFile,
