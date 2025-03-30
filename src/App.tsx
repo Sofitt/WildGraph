@@ -6,6 +6,7 @@ import { NodeForm } from '@/components/NodeForm'
 import type { NodeType } from './components/types/graph'
 import { useGraphData } from '@/components/hooks/main/useGraphData.ts'
 import { useGraphEvents } from '@/components/hooks/main/useGraphEvents.ts'
+import { Settings } from '@/components/Settings.tsx'
 
 function App() {
   const width = 800,
@@ -41,6 +42,7 @@ function App() {
   return (
     <div>
       <ControlPanel toggle3D={() => setIs3D((prev) => !prev)} />
+      <Settings />
       {is3D ? (
         <Graph3D graphUse={graphUse} onEditNode={setEditNode} />
       ) : (

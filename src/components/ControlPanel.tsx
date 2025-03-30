@@ -10,13 +10,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ toggle3D }) => {
       <div className='flex items-center gap-2'>
         <button onClick={toggle3D}>Переключить 3D режим</button>
         <button id='addNodeBtn'>Добавить узел</button>
-        <button id='saveToFileBtn'>Сохранить в файл</button>
+        <button id='saveToFileBtn' title='Сохранить в файл'>
+          💾
+        </button>
       </div>
-      <label className='inline-flex items-center justify-between'>
-        <span>Сила отталкивания:</span>
-
-        <input type='range' id='repulsionRange' min='-200' max='-10' defaultValue='-50' />
-      </label>
     </div>
   )
 }

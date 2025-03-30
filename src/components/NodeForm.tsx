@@ -119,22 +119,23 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
           <span>Цвет:</span>
           <input type='color' value={color} onChange={(e) => setColor(e.target.value)} />
         </label>
-        <div className='flex items-center gap-4 justify-self-end'>
+        <div className='flex items-center gap-4 justify-self-end w-full'>
           {mode === 'edit' && onDelete && node && (
             <button
-              className='!bg-red-300 hover:!bg-red-400'
+              className='!bg-red-300 hover:!bg-red-400 mr-auto'
               type='button'
               onClick={() => {
                 onDelete(node)
                 onClose()
               }}
+              title='Удалить'
             >
-              Удалить
+              🗑️
             </button>
           )}
           <button type='submit'>Сохранить</button>
           <button type='button' onClick={onClose}>
-            Отмена
+            Закрыть
           </button>
         </div>
       </form>

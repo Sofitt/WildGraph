@@ -7,6 +7,7 @@ import { Line2Type, useThickLine } from '@/components/hooks/3d/useThickLine.ts'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
 import { NodeType } from '@/components/types/graph.ts'
+import { useGlobal } from '@/components/hooks/3d/useGlobal.ts'
 
 export interface Node3D extends NodeType {
   join: Node3D[]
@@ -144,11 +145,9 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
       return { onClick, onMouseMove }
     }
     const { onClick, onMouseMove } = useRaycaster()
-    renderer.domElement.addEventListener('click', onClick)
-    renderer.domElement.addEventListener('mousemove', onMouseMove)
 
     let lastLabelUpdate = 0
-    const labelUpdateInterval = 100
+    const labelUpdateInterval = +useGlobal().parse().LABEL_UPDATE_INTERVAL
     function updateLabels() {
       const now = Date.now()
       if (now - lastLabelUpdate < labelUpdateInterval) return
@@ -179,13 +178,9 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
       })
     }
 
-    function animate() {
-      requestAnimationFrame(animate)
-      controls.update()
+    const render = () => {
       renderer.render(scene, camera)
-
       updateLabels()
-
       links.forEach((link) => {
         if (!(link.line3D && link.source.mesh3D && link.target.mesh3D)) return
 
@@ -197,17 +192,30 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         link.target.mesh3D.getWorldPosition(targetPos)
 
         const newPositions: number[] = [sourcePos, targetPos].flatMap((p) => [p.x, p.y, p.z])
-
         const geometry = link.line3D.geometry as LineGeometry
         geometry.setPositions(newPositions)
         geometry.attributes.position.needsUpdate = true
       })
+      renderer.render(scene, camera)
     }
-    animate()
+
+    const rendererClick = (event: MouseEvent) => {
+      onClick(event)
+      render()
+    }
+    const rendererMouseMove = (event: MouseEvent) => {
+      onMouseMove(event)
+      render()
+    }
+
+    renderer.domElement.addEventListener('click', rendererClick)
+    renderer.domElement.addEventListener('mousemove', rendererMouseMove)
+
+    controls.addEventListener('change', render)
 
     return () => {
-      renderer.domElement.removeEventListener('click', onClick)
-      renderer.domElement.removeEventListener('mousemove', onMouseMove)
+      renderer.domElement.removeEventListener('click', rendererClick)
+      renderer.domElement.removeEventListener('mousemove', rendererMouseMove)
       if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
         containerRef.current.removeChild(renderer.domElement)
       }
