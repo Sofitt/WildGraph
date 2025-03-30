@@ -35,7 +35,7 @@ export function useGraphRendering(
       .append('circle')
       .attr('class', 'node')
       .attr('r', (d) => d.size)
-      .attr('fill', 'steelblue')
+      .attr('fill', (d) => d.color)
 
     // Создание текстовых меток
     const textElements = svg

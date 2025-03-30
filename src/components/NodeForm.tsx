@@ -1,4 +1,4 @@
-import { type FC, type FormEvent, useState, useEffect } from 'react'
+import { type FC, type FormEvent, useState, useEffect, useRef } from 'react'
 import type { NodeType } from '@/components/types/graph.ts'
 
 interface NodeFormProps {
@@ -12,20 +12,26 @@ interface NodeFormProps {
 export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDelete }) => {
   const [name, setName] = useState<string>('')
   const [family, setFamily] = useState<string>('')
+  const [color, setColor] = useState<string>('#ff0000')
+  const firstField = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (node) {
       setName(node.name)
       setFamily(node.family.join(', '))
+      setColor(node.color || '#ff0000')
     } else {
       setName('')
       setFamily('')
+      setColor('#ff0000')
     }
   }, [node])
 
   const reset = () => {
     setName('')
     setFamily('')
+    setColor('#ff0000')
+    firstField.current?.focus()
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -40,10 +46,11 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       x: node ? node.x : 0,
       y: node ? node.y : 0,
       z: node ? node.z : 0,
-      name: name.trim(),
-      family: families,
       join: node ? node.join : [],
       size: node ? node.size : 5,
+      name: name.trim(),
+      family: families,
+      color,
     }
     onSave(updatedNode)
     reset()
@@ -64,11 +71,20 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       <form onSubmit={handleSubmit} className='grid gap-2'>
         <label className='inline-flex items-center gap-2 justify-between'>
           <span>Название:</span>
-          <input type='text' value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            ref={firstField}
+            type='text'
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </label>
         <label className='inline-flex items-center gap-2 justify-between'>
           <span>Семейства (через запятую):</span>
           <input type='text' value={family} onChange={(e) => setFamily(e.target.value)} />
+        </label>
+        <label className='inline-flex items-center gap-2 justify-between'>
+          <span>Цвет:</span>
+          <input type='color' value={color} onChange={(e) => setColor(e.target.value)} />
         </label>
         <div className='flex items-center gap-4 justify-self-end'>
           {mode === 'edit' && onDelete && node && (

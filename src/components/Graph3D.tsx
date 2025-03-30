@@ -6,15 +6,10 @@ import type { UseGraphData } from '@/components/hooks/main/useGraphData.ts'
 import { Line2Type, useThickLine } from '@/components/hooks/3d/useThickLine.ts'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
+import { NodeType } from '@/components/types/graph.ts'
 
-export interface Node3D {
-  z: number
-  x: number
-  y: number
-  name: string
-  family: string[]
+export interface Node3D extends NodeType {
   join: Node3D[]
-  size: number
   mesh3D?: THREE.Mesh // сфера
   label3D?: HTMLDivElement // подпись
 }
@@ -34,7 +29,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
   const width = 800
   const height = 600
   const resolution = new THREE.Vector2(width, height)
-  const { createThickLine } = useThickLine(resolution, 5, 0x0000ff)
+  const { createThickLine } = useThickLine(resolution, 5)
 
   useEffect(() => {
     if (containerRef.current) {
@@ -55,10 +50,13 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
     const nodes: Node3D[] = graphUse.graphData.nodes
     const links: Link3D[] = graphUse.graphData.links
 
-    const material = new THREE.MeshBasicMaterial({ color: THREE.Color.NAMES.red })
     nodes.forEach((n) => {
       const geometry = new THREE.SphereGeometry(n.size, 16, 16)
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(n.color),
+      })
       const sphere = new THREE.Mesh(geometry, material)
+
       sphere.position.set(n.x, n.y, n.z)
       sphere.userData = { node: n }
       n.mesh3D = sphere
@@ -99,8 +97,8 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
       scene.add(thickLine)
     })
 
-    // === Добавление обработчика клика через Raycaster ===
     const useRaycaster = () => {
+      // === Добавление взаимодействия с нодами через Raycaster ===
       const raycaster = new THREE.Raycaster()
       const mouse = new THREE.Vector2()
       const onClick = (event: MouseEvent) => {
@@ -121,8 +119,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
         raycaster.setFromCamera(mouse, camera)
         const intersects = raycaster.intersectObjects(
-          //@ts-ignore
-          nodes.map((n) => n.mesh3D).filter(Boolean),
+          nodes.map((n) => n.mesh3D).filter(Boolean) as THREE.Object3D[],
         )
         if (intersects.length > 0) {
           const hoveredNode = intersects[0].object.userData.node as Node3D

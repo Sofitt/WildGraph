@@ -19,6 +19,7 @@ export const clearRecursiveToStringify = (data: GraphData<Node3D>) => {
     delete computedLink.target.mesh3D
     delete computedLink.source.label3D
     delete computedLink.target.label3D
+    delete computedLink.line3D
 
     return computedLink
   })

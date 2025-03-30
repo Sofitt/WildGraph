@@ -6,6 +6,7 @@ export interface NodeType {
   fy?: number | null
   name: string
   family: string[]
+  color: string
   join: NodeType[]
   size: number
 }
