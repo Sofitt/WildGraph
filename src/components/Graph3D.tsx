@@ -64,12 +64,12 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
 
       // Подпись (label) внутри контейнера
       const div = document.createElement('div')
-      div.className = 'label'
+      div.className = 'nodelabel'
       div.textContent = n.name
       div.style.position = 'absolute'
       div.style.color = 'black'
       div.style.fontSize = '14px'
-      div.style.translate = '-50% 0'
+      div.style.translate = '-50%'
 
       n.label3D = div
       containerRef.current?.appendChild(div)
@@ -147,25 +147,44 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
     renderer.domElement.addEventListener('click', onClick)
     renderer.domElement.addEventListener('mousemove', onMouseMove)
 
+    let lastLabelUpdate = 0
+    const labelUpdateInterval = 100
+    function updateLabels() {
+      const now = Date.now()
+      if (now - lastLabelUpdate < labelUpdateInterval) return
+      lastLabelUpdate = now
+
+      nodes.forEach((n, index) => {
+        if (!(n.label3D && n.mesh3D)) return
+        const pos = new THREE.Vector3()
+        n.mesh3D.getWorldPosition(pos)
+        pos.project(camera)
+        const screenX = (pos.x * 0.5 + 0.5) * width
+        const screenY = (-pos.y * 0.5 + 0.5) * height
+        if (screenX < 0 || screenX > width || screenY < 0 || screenY > height) {
+          n.label3D.style.display = 'none'
+          return
+        }
+        if (n.label3D.style.display === 'none') {
+          n.label3D.style.display = ''
+        }
+        const offset = n.size + 4
+        const zIndex = Math.floor((1 - pos.z) * 100000)
+        if (index === 0) {
+          console.log(n.name, zIndex)
+        }
+        n.label3D.style.left = `${screenX}px`
+        n.label3D.style.top = `${screenY + offset}px`
+        n.label3D.style.zIndex = `${zIndex}`
+      })
+    }
+
     function animate() {
       requestAnimationFrame(animate)
       controls.update()
       renderer.render(scene, camera)
 
-      nodes.forEach((n) => {
-        if (!(n.label3D && n.mesh3D)) return
-        // Берём мировую позицию сферы
-        const pos = new THREE.Vector3()
-        n.mesh3D.getWorldPosition(pos)
-        // Проецируем в экранные координаты
-        pos.project(camera)
-        const screenX = (pos.x * 0.5 + 0.5) * width
-        const screenY = (-pos.y * 0.5 + 0.5) * height
-        // Небольшое смещение вниз (чтобы подпись была под сферой)
-        const offset = n.size + 4
-        n.label3D.style.left = `${screenX}px`
-        n.label3D.style.top = `${screenY + offset}px`
-      })
+      updateLabels()
 
       links.forEach((link) => {
         if (!(link.line3D && link.source.mesh3D && link.target.mesh3D)) return

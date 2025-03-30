@@ -7,6 +7,7 @@ export interface NodeType {
   name: string
   family: string[]
   color: string
+  notes: string[]
   join: NodeType[]
   size: number
 }

@@ -53,6 +53,7 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       size: node ? node.size : 5,
       name: localName,
       family: families,
+      notes: [],
       color,
     }
     onSave(updatedNode)
