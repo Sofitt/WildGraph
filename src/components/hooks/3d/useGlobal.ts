@@ -4,7 +4,10 @@ type Globals = {
   LABEL_UPDATE_INTERVAL: NumberAsString
 }
 const definitionMap: Record<keyof Globals, string> = {
-  LABEL_UPDATE_INTERVAL: '[Число]. Частота обновлений подписей узлов',
+  LABEL_UPDATE_INTERVAL: '[Число]. Частота обновлений позиции подписей узлов',
+}
+const defaultData: Globals = {
+  LABEL_UPDATE_INTERVAL: '10',
 }
 const storageKey = 'wild_global'
 
@@ -25,9 +28,6 @@ export const useGlobal = () => {
   }
   const setDefault = (force?: boolean) => {
     const data = parse()
-    const defaultData = {
-      LABEL_UPDATE_INTERVAL: 1,
-    }
     Object.keys(defaultData).forEach((key) => {
       if (!Object.hasOwn(data, key) || force) {
         set(key as keyof Globals, defaultData[key as keyof typeof defaultData])

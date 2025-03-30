@@ -14,6 +14,10 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ toggle3D }) => {
           💾
         </button>
       </div>
+      <label className='inline-flex items-center justify-between'>
+        <span>Сила отталкивания:</span>
+        <input type='range' id='repulsionRange' min='-200' max='-10' defaultValue='-50' />
+      </label>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { type FC, type FormEvent, useState, useEffect, useRef } from 'react'
 import type { NodeType } from '@/components/types/graph.ts'
+import { showNotification } from '@/lib/showNotification.ts'
 
 interface NodeFormProps {
   node: NodeType | null
@@ -12,6 +13,7 @@ interface NodeFormProps {
 export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDelete }) => {
   const [name, setName] = useState<string>('')
   const [family, setFamily] = useState<string>('')
+  const [note, setNote] = useState<string>('')
   const [color, setColor] = useState<string>('#ff0000')
   const firstField = useRef<HTMLInputElement>(null)
 
@@ -19,10 +21,12 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
     if (node) {
       setName(node.name)
       setFamily(node.family.join(' '))
+      setNote(node.notes.join('\n'))
       setColor(node.color || '#ff0000')
     } else {
       setName('')
       setFamily('')
+      setNote('')
       setColor('#ff0000')
     }
   }, [node])
@@ -30,20 +34,21 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
   const reset = () => {
     setName('')
     setFamily('')
+    setNote('')
     setColor('#ff0000')
     firstField.current?.focus()
   }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const localName = name.trim()
+    const localName = name?.trim()?.toLowerCase()
     if (!localName || !family.trim()) {
       alert('Название и семейство обязательны')
       return
     }
     const families = family.split(' ').map((s) => s.trim().toLowerCase())
-    if (!localName.includes(' ')) {
-      families.unshift(localName.toLowerCase())
+    if (!localName.includes(' ') && !families.includes(localName)) {
+      families.unshift(localName)
     }
     const updatedNode: NodeType = {
       x: node ? node.x : 0,
@@ -51,13 +56,17 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
       z: node ? node.z : 0,
       join: node ? node.join : [],
       size: node ? node.size : 5,
-      name: localName,
+      name: localName[0].toUpperCase() + localName.slice(1),
       family: families,
-      notes: [],
+      notes: note.trim().split('\n'),
       color,
     }
     onSave(updatedNode)
-    reset()
+    if (mode === 'add') {
+      reset()
+    } else {
+      showNotification('Сохранено')
+    }
   }
 
   return (
@@ -115,10 +124,22 @@ export const NodeForm: FC<NodeFormProps> = ({ node, mode, onSave, onClose, onDel
             onChange={(e) => setFamily(e.target.value)}
           />
         </label>
-        <label className='inline-flex items-center gap-2 justify-between'>
+        <div className='inline-flex items-center gap-2 justify-between'>
           <span>Цвет:</span>
           <input type='color' value={color} onChange={(e) => setColor(e.target.value)} />
-        </label>
+        </div>
+
+        <div className='grid gap-2'>
+          <span>Заметки:</span>
+          <textarea
+            name='notes'
+            placeholder='Здесь могут быть заметки...'
+            className='w-full min-h-[100px] max-h-[400px] border border-dashed'
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+
         <div className='flex items-center gap-4 justify-self-end w-full'>
           {mode === 'edit' && onDelete && node && (
             <button

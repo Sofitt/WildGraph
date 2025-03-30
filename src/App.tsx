@@ -53,8 +53,12 @@ function App() {
           node={nodeToForm}
           mode={formMode}
           onSave={(updatedNode) => {
-            ;(formMode === 'add' ? graphUse.addNode : graphUse.editNode)(updatedNode)
-            setNodeToForm(null)
+            if (formMode === 'add') {
+              graphUse.addNode(updatedNode)
+              setNodeToForm(null)
+            } else {
+              graphUse.editNode(updatedNode)
+            }
           }}
           onDelete={(nodeToDelete) => {
             graphUse.deleteNode(nodeToDelete)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
+import { useNodeAdapter } from '@/components/hooks/main/useNodeAdapter.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>
 export function useGraphData(width: number, height: number) {
@@ -14,6 +15,7 @@ export function useGraphData(width: number, height: number) {
 
       const data = JSON.parse(stored)
       // Сброс позиции, если точки за пределами экрана
+      data.nodes = data.nodes.map(useNodeAdapter)
       data.nodes.forEach((n: NodeType) => {
         if (n.x < 0 || n.x > width || n.y < 0 || n.y > height) {
           n.x = width / 2

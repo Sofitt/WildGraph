@@ -9,7 +9,7 @@ export interface NodeType {
   color: string
   notes: string[]
   join: NodeType[]
-  size: number
+  size: number | 5
 }
 
 export interface GraphData<N = NodeType> {

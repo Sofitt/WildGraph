@@ -153,7 +153,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
       if (now - lastLabelUpdate < labelUpdateInterval) return
       lastLabelUpdate = now
 
-      nodes.forEach((n, index) => {
+      nodes.forEach((n) => {
         if (!(n.label3D && n.mesh3D)) return
         const pos = new THREE.Vector3()
         n.mesh3D.getWorldPosition(pos)
@@ -169,9 +169,7 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         }
         const offset = n.size + 4
         const zIndex = Math.floor((1 - pos.z) * 100000)
-        if (index === 0) {
-          console.log(n.name, zIndex)
-        }
+
         n.label3D.style.left = `${screenX}px`
         n.label3D.style.top = `${screenY + offset}px`
         n.label3D.style.zIndex = `${zIndex}`
