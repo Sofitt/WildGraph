@@ -4,8 +4,8 @@ import Graph2D from './components/Graph2D'
 import Graph3D from './components/Graph3D'
 import { NodeForm } from '@/components/NodeForm'
 import type { NodeType } from './components/types/graph'
-import { useGraphData } from '@/components/2d/useGraphData.ts'
-import { useGraphEvents } from '@/components/2d/useGraphEvents.ts'
+import { useGraphData } from '@/components/hooks/main/useGraphData.ts'
+import { useGraphEvents } from '@/components/hooks/main/useGraphEvents.ts'
 
 function App() {
   const width = 800,

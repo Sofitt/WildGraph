@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GraphData, NodeType } from '../types/graph'
+import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>

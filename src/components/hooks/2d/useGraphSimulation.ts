@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import * as d3 from 'd3'
-import { GraphData } from '../types/graph'
+import { GraphData } from '../../types/graph.ts'
 
 export function useGraphSimulation(graphData: GraphData, width: number, height: number) {
   const simulationRef = useRef<d3.Simulation<any, undefined>>(null)
@@ -14,7 +14,7 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
           if (node === other) return
           const dz = node.z - other.z
           const distance = Math.abs(dz) || 1e-6
-          const k = 20 // коэффициент, можно настроить
+          const k = 10 // коэффициент, можно настроить
           netForce += (dz / distance) * ((k * alpha) / (distance * distance))
         })
         node.vz = (node.vz || 0) + netForce

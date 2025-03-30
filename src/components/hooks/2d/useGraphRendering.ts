@@ -1,6 +1,6 @@
 import { useEffect, RefObject } from 'react'
 import * as d3 from 'd3'
-import { GraphData, NodeType } from '../types/graph'
+import { GraphData, NodeType } from '../../types/graph.ts'
 
 export function useGraphRendering(
   svgRef: RefObject<SVGSVGElement | null>,

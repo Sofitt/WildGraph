@@ -2,7 +2,10 @@ import { type FC, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { mean } from 'd3'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import type { UseGraphData } from '@/components/2d/useGraphData.ts'
+import type { UseGraphData } from '@/components/hooks/main/useGraphData.ts'
+import { Line2Type, useThickLine } from '@/components/hooks/3d/useThickLine.ts'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
 
 export interface Node3D {
   z: number
@@ -19,7 +22,7 @@ export interface Node3D {
 interface Link3D {
   source: Node3D
   target: Node3D
-  line3D?: THREE.Line // линия
+  line3D?: THREE.Line | Line2Type
 }
 interface Graph3DProps {
   graphUse: UseGraphData
@@ -30,6 +33,8 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const width = 800
   const height = 600
+  const resolution = new THREE.Vector2(width, height)
+  const { createThickLine } = useThickLine(resolution, 5, 0x0000ff)
 
   useEffect(() => {
     if (containerRef.current) {
@@ -39,14 +44,13 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
     const renderer = new THREE.WebGLRenderer({ alpha: true })
+
     renderer.setClearColor(0x000000, 0) // делаем фон прозрачным
     renderer.setSize(width, height)
     if (containerRef.current) {
       containerRef.current.style.position = 'relative'
       containerRef.current.appendChild(renderer.domElement)
     }
-
-    const controls = new OrbitControls(camera, renderer.domElement)
 
     const nodes: Node3D[] = graphUse.graphData.nodes
     const links: Link3D[] = graphUse.graphData.links
@@ -73,23 +77,26 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
       containerRef.current?.appendChild(div)
     })
 
-    const centerX = mean(nodes, (n) => n.x) || 0
-    const centerY = mean(nodes, (n) => n.y) || 0
-    const desiredZ = 300
-    camera.position.set(centerX, centerY, desiredZ)
-    controls.target.set(centerX, centerY, 0)
-    controls.update()
+    const useControls = () => {
+      const controls = new OrbitControls(camera, renderer.domElement)
+      const centerX = mean(nodes, (n) => n.x) || 0
+      const centerY = mean(nodes, (n) => n.y) || 0
+      const desiredZ = 300
+      camera.position.set(centerX, centerY, desiredZ)
+      controls.target.set(centerX, centerY, 0)
+      controls.update()
+      return { controls }
+    }
+    const { controls } = useControls()
 
     links.forEach((link) => {
-      const material = new THREE.LineBasicMaterial({ color: THREE.Color.NAMES.blue })
       const points = [
         new THREE.Vector3(link.source.x, link.source.y, link.source.z),
         new THREE.Vector3(link.target.x, link.target.y, link.target.z),
       ]
-      const geometry = new THREE.BufferGeometry().setFromPoints(points)
-      const line = new THREE.Line(geometry, material)
-      link.line3D = line
-      scene.add(line)
+      const thickLine = createThickLine(points)
+      link.line3D = thickLine
+      scene.add(thickLine)
     })
 
     // === Добавление обработчика клика через Raycaster ===
@@ -105,15 +112,43 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
         const intersects = raycaster.intersectObjects(objects)
         if (intersects.length > 0) {
           const clickedNode = intersects[0].object.userData.node as Node3D
-          if (onEditNode) {
-            onEditNode(clickedNode)
-          }
+          onEditNode(clickedNode)
         }
       }
-      return { onClick }
+      const onMouseMove = (event: MouseEvent) => {
+        const rect = renderer.domElement.getBoundingClientRect()
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+        raycaster.setFromCamera(mouse, camera)
+        const intersects = raycaster.intersectObjects(
+          //@ts-ignore
+          nodes.map((n) => n.mesh3D).filter(Boolean),
+        )
+        if (intersects.length > 0) {
+          const hoveredNode = intersects[0].object.userData.node as Node3D
+          links.forEach((link: Link3D) => {
+            const material = link?.line3D?.material as LineMaterial
+            if (!material) return
+
+            if (link.source.name === hoveredNode.name || link.target.name === hoveredNode.name) {
+              material.color.set(0xffa500)
+            } else {
+              material.color.set(0x999999)
+            }
+          })
+        } else {
+          links.forEach((link: Link3D) => {
+            const material = link?.line3D?.material as LineMaterial
+            if (!material) return
+            material.color.set(0x999999)
+          })
+        }
+      }
+      return { onClick, onMouseMove }
     }
-    const { onClick } = useRaycaster()
+    const { onClick, onMouseMove } = useRaycaster()
     renderer.domElement.addEventListener('click', onClick)
+    renderer.domElement.addEventListener('mousemove', onMouseMove)
 
     function animate() {
       requestAnimationFrame(animate)
@@ -121,53 +156,42 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse }) => {
       renderer.render(scene, camera)
 
       nodes.forEach((n) => {
-        if (n.label3D && n.mesh3D) {
-          if (n.label3D && n.mesh3D) {
-            // Берём мировую позицию сферы
-            const pos = new THREE.Vector3()
-            n.mesh3D.getWorldPosition(pos)
-            // Проецируем в экранные координаты
-            pos.project(camera)
-            const screenX = (pos.x * 0.5 + 0.5) * width
-            const screenY = (-pos.y * 0.5 + 0.5) * height
-            // Небольшое смещение вниз (чтобы подпись была под сферой)
-            const offset = n.size + 4
-            n.label3D.style.left = `${screenX}px`
-            n.label3D.style.top = `${screenY + offset}px`
-          }
-        }
+        if (!(n.label3D && n.mesh3D)) return
+        // Берём мировую позицию сферы
+        const pos = new THREE.Vector3()
+        n.mesh3D.getWorldPosition(pos)
+        // Проецируем в экранные координаты
+        pos.project(camera)
+        const screenX = (pos.x * 0.5 + 0.5) * width
+        const screenY = (-pos.y * 0.5 + 0.5) * height
+        // Небольшое смещение вниз (чтобы подпись была под сферой)
+        const offset = n.size + 4
+        n.label3D.style.left = `${screenX}px`
+        n.label3D.style.top = `${screenY + offset}px`
       })
 
       links.forEach((link) => {
-        if (link.line3D && link.source.mesh3D && link.target.mesh3D) {
-          link.source.mesh3D.updateMatrixWorld()
-          link.target.mesh3D.updateMatrixWorld()
+        if (!(link.line3D && link.source.mesh3D && link.target.mesh3D)) return
 
-          const sourcePos = new THREE.Vector3()
-          const targetPos = new THREE.Vector3()
-          link.source.mesh3D.getWorldPosition(sourcePos)
-          link.target.mesh3D.getWorldPosition(targetPos)
+        link.source.mesh3D.updateMatrixWorld()
+        link.target.mesh3D.updateMatrixWorld()
+        const sourcePos = new THREE.Vector3()
+        const targetPos = new THREE.Vector3()
+        link.source.mesh3D.getWorldPosition(sourcePos)
+        link.target.mesh3D.getWorldPosition(targetPos)
 
-          // Достаём geometry линии
-          const geometry = link.line3D.geometry as THREE.BufferGeometry
-          // Берём массив координат
-          const positions = geometry.attributes.position.array as Float32Array
-          // Обновляем
-          positions[0] = sourcePos.x
-          positions[1] = sourcePos.y
-          positions[2] = sourcePos.z
-          positions[3] = targetPos.x
-          positions[4] = targetPos.y
-          positions[5] = targetPos.z
-          // Сообщаем Three.js, что координаты обновились
-          geometry.attributes.position.needsUpdate = true
-        }
+        const newPositions: number[] = [sourcePos, targetPos].flatMap((p) => [p.x, p.y, p.z])
+
+        const geometry = link.line3D.geometry as LineGeometry
+        geometry.setPositions(newPositions)
+        geometry.attributes.position.needsUpdate = true
       })
     }
     animate()
 
     return () => {
       renderer.domElement.removeEventListener('click', onClick)
+      renderer.domElement.removeEventListener('mousemove', onMouseMove)
       if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
         containerRef.current.removeChild(renderer.domElement)
       }

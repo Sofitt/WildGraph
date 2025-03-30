@@ -1,7 +1,7 @@
 import { type FC, useRef } from 'react'
-import { type UseGraphData } from './2d/useGraphData'
-import { useGraphSimulation } from './2d/useGraphSimulation'
-import { useGraphRendering } from './2d/useGraphRendering'
+import { type UseGraphData } from '@/components/hooks/main/useGraphData.ts'
+import { useGraphSimulation } from '@/components/hooks/2d/useGraphSimulation'
+import { useGraphRendering } from '@/components/hooks/2d/useGraphRendering'
 import { type NodeType } from './types/graph'
 
 type Props = {
