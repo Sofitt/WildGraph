@@ -39,6 +39,15 @@ export function useGraphRendering(
       group.selectAll('*').remove()
     }
 
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.5, 4]) // можно настроить минимальный и максимальный зум
+      .on('zoom', (event) => {
+        group.attr('transform', event.transform)
+      })
+    // @ts-ignore
+    svg.call(zoom)
+
     // Создание элементов связей
     const linkElements = group
       .selectAll('.link')
