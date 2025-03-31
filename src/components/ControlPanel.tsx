@@ -42,7 +42,7 @@ const ControlPanel: FC<ControlPanelProps> = ({
       </div>
       <label className='inline-flex items-center justify-between max-2xl:hidden'>
         <span>Сила отталкивания:</span>
-        <input type='range' id='repulsionRange' min='-200' max='-10' defaultValue='-50' />
+        <input type='range' id='repulsionRange' min='-80' max='-10' defaultValue='-30' />
       </label>
     </div>
   )

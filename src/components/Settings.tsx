@@ -51,7 +51,10 @@ export const Settings: FC<{ className?: string }> = ({ className = '' }) => {
           // @ts-ignore
           const value = settings[key]
           return (
-            <label key={key} className='inline-grid gap-2'>
+            <label
+              key={key}
+              className='inline-grid md:inline-flex md:items-center md:justify-between gap-2'
+            >
               <span className='inline-flex items-center gap-2'>
                 <span
                   className='icon'

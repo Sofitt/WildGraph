@@ -1,4 +1,4 @@
-import { type FC, type FormEvent, useState, useEffect, useRef } from 'react'
+import { type FC, type FormEvent, useState, useEffect, useRef, useMemo, ChangeEvent } from 'react'
 import type { GraphData, NodeType } from '@/components/types/graph.ts'
 import { showNotification } from '@/lib/showNotification.ts'
 
@@ -21,19 +21,90 @@ export const NodeForm: FC<NodeFormProps> = ({
 }) => {
   const [name, setName] = useState<string>('')
   const [family, setFamily] = useState<string>('')
+  const [anchor, setAnchor] = useState<string>('')
+  const [binding, setBinding] = useState<string>('')
   const [note, setNote] = useState<string>('')
   const [color, setColor] = useState<string>('#ff0000')
   const firstField = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    firstField.current = document.querySelector('input[data-key="1"]')
+  })
+
+  const fields = useMemo(
+    () => [
+      {
+        title: 'Название',
+        icon: {
+          symbol: '"?"',
+          content: '"Если название будет из одного слова, то оно добавится в семейства"',
+        },
+        input: {
+          placeholder: '',
+          ref: 1,
+          set: (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value),
+          get: name,
+        },
+      },
+      {
+        title: 'Семейство',
+        icon: {
+          symbol: '"?"',
+          content:
+            '"Если семейство составное (2 и более слов), тогда вместо пробелов использовать `_`. Для разделения семейств, используется пробел. Пример: стальная_воля воля металл"',
+        },
+        input: {
+          placeholder: '',
+          ref: 2,
+          set: (e: ChangeEvent<HTMLInputElement>) => setFamily(e.target.value),
+          get: family,
+        },
+      },
+      {
+        title: 'Признак',
+        icon: {
+          symbol: '"?"',
+          content:
+            '"Якорь для ПРИВЯЗКИ других узлов. Предполагается, что признаки будут уникальными для каждого узла"',
+        },
+        input: {
+          placeholder: '',
+          ref: 3,
+          set: (e: ChangeEvent<HTMLInputElement>) => setAnchor(e.target.value),
+          get: anchor,
+        },
+      },
+      {
+        title: 'Привязка',
+        icon: {
+          symbol: '"?"',
+          content:
+            '"Связывает узел с другим узлом указанного семейства, в случае, если оно является его признаком"',
+        },
+        input: {
+          placeholder: '',
+          ref: 4,
+          set: (e: ChangeEvent<HTMLInputElement>) => setBinding(e.target.value),
+          get: binding,
+        },
+      },
+    ],
+    [name, family, anchor, binding],
+  )
+
+  useEffect(() => {
     if (node) {
       setName(node.name)
       setFamily(node.family.join(' '))
+      setAnchor(node.anchor.join(' '))
+      setBinding(node.binding.join(' '))
       setNote(node.notes.join('\n'))
       setColor(node.color || '#ff0000')
     } else {
       setName('')
       setFamily('')
+      setAnchor('')
+      setBinding('')
       setNote('')
       setColor('#ff0000')
     }
@@ -54,9 +125,24 @@ export const NodeForm: FC<NodeFormProps> = ({
       showNotification('Название обязательно')
       return
     }
-    const families = family.split(' ').map((s) => s.trim().toLowerCase())
-    if (!localName.includes(' ') && !families.includes(localName)) {
-      families.unshift(localName)
+    const transform = (value: string, split: string = ' ') =>
+      value.trim()
+        ? value
+            .trim()
+            .split(split)
+            .map((s) => s.trim().toLowerCase())
+        : []
+
+    const families = transform(family)
+    const anchors = transform(anchor)
+    const bindings = transform(binding)
+    const notes = transform(note, '\n')
+    if (!localName.includes(' ')) {
+      if (!families.includes(localName)) {
+        families.unshift(localName)
+      } else if (!anchors.length) {
+        anchors.push(localName)
+      }
     }
 
     let id
@@ -74,7 +160,9 @@ export const NodeForm: FC<NodeFormProps> = ({
       size: node ? node.size : 5,
       name: localName[0].toUpperCase() + localName.slice(1),
       family: families,
-      notes: note.trim().split('\n'),
+      anchor: anchors,
+      binding: bindings,
+      notes,
       color,
     }
 
@@ -90,48 +178,31 @@ export const NodeForm: FC<NodeFormProps> = ({
     <div className='floating grid'>
       <h3 className='mb-4'>{mode === 'add' ? 'Добавить узел' : 'Редактировать узел'}</h3>
       <form onSubmit={handleSubmit} className='grid gap-2'>
-        <label className='inline-flex items-center gap-2 justify-between'>
-          <span className='inline-flex items-center'>
-            <span
-              className='icon mr-2'
-              style={
-                {
-                  '--icon-symbol': '"?"',
-                  '--icon-content':
-                    '"Если название будет из одного слова, то оно добавится в семейства"',
-                } as object
-              }
-            />
-            Название:
-          </span>
-          <input
-            ref={firstField}
-            type='text'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-        <label className='inline-flex items-center gap-2 justify-between'>
-          <span className='inline-flex items-center'>
-            <span
-              className='icon mr-2'
-              style={
-                {
-                  '--icon-symbol': '"?"',
-                  '--icon-content':
-                    '"Если семейство составное (2 и более слов), тогда вместо пробелов использовать `_`. Для разделения семейств, используется пробел. Пример: стальная_воля воля металл"',
-                } as object
-              }
-            />
-            Семейства:
-          </span>
-          <input
-            type='text'
-            value={family}
-            placeholder='новый_узел узел'
-            onChange={(e) => setFamily(e.target.value)}
-          />
-        </label>
+        {fields.map((f) => {
+          return (
+            <label className='inline-flex items-center gap-2 justify-between' key={f.title}>
+              <span className='inline-flex items-center'>
+                <span
+                  className='icon mr-2'
+                  style={
+                    {
+                      '--icon-symbol': `${f.icon.symbol}`,
+                      '--icon-content': `${f.icon.content}`,
+                    } as object
+                  }
+                />
+                {f.title}:
+              </span>
+              <input
+                data-key={f.input.ref}
+                type='text'
+                placeholder={f.input.placeholder}
+                value={f.input.get}
+                onChange={f.input.set}
+              />
+            </label>
+          )
+        })}
         <div className='inline-flex items-center gap-2 justify-between'>
           <span>Цвет:</span>
           <input type='color' value={color} onChange={(e) => setColor(e.target.value)} />

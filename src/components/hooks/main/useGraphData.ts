@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
 import { useNodeAdapter } from '@/components/hooks/main/useNodeAdapter.ts'
+import { uniqArrByKey } from '@/lib/uniqArrByKey.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>
 export function useGraphData() {
@@ -36,7 +37,9 @@ export function useGraphData() {
   }, [width, height])
 
   const saveData = (data?: GraphData) => {
-    Save.toStorage(data || graphData)
+    const temp = data || graphData
+    temp.nodes = uniqArrByKey<NodeType>(temp.nodes, 'id')
+    Save.toStorage(temp)
   }
   const saveToFile = () => {
     Save.toFile(graphData)
@@ -75,8 +78,11 @@ export function useGraphData() {
       nodeI.join = []
       for (let j = i + 1; j < data.nodes.length; j++) {
         const nodeJ = data.nodes[j]
+        const pairBinding =
+          nodeI.binding.some((b) => nodeJ.anchor.includes(b)) ||
+          nodeJ.binding.some((b) => nodeI.anchor.includes(b))
         const pairFamilies = nodeI.family.some((f) => nodeJ.family.includes(f))
-        if (!pairFamilies) continue
+        if (!pairFamilies && !pairBinding) continue
         links.push({ source: nodeI, target: nodeJ })
         nodeI.join.push(nodeJ)
         nodeJ.join.push(nodeI)

@@ -291,7 +291,9 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
 
     // Узел подходит, если для каждого запроса существует семейство, содержащее этот запрос
     const targetNode = nodes.find((n) =>
-      queries.every((q) => n.family.some((f) => f.toLowerCase().includes(q))),
+      queries.every(
+        (q) => n.family.some((f) => f.includes(q)) || n.anchor.some((a) => a.includes(q)),
+      ),
     )
 
     if (targetNode) {

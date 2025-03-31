@@ -47,7 +47,7 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
         d3
           .forceLink(graphData.links)
           .id((d: any) => d.name)
-          .distance(100),
+          .distance((d) => 100 + d.source.size * 5),
       )
       .force('center', d3.forceCenter(width / 2, height / 2))
       .force('z', forceZRepulsion())

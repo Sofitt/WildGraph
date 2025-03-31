@@ -6,7 +6,9 @@ export interface NodeType {
   fx?: number | null
   fy?: number | null
   name: string
-  family: string[]
+  family: string[] // Семейство
+  anchor: string[] // Якорь для привязки (binding)
+  binding: string[] // Привязка к узлу с указанными якорями
   color: string
   notes: string[]
   join: NodeType[]
