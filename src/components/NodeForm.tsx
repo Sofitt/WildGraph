@@ -122,28 +122,31 @@ export const NodeForm: FC<NodeFormProps> = ({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const localName = name?.trim()?.toLowerCase()
+    const localName = name.trim()
     if (!localName) {
       showNotification('Название обязательно')
       return
     }
-    const transform = (value: string, split: string = ' ') =>
+    const transform = (value: string, split: string, toLowerCase?: boolean) =>
       value.trim()
         ? value
             .trim()
             .split(split)
-            .map((s) => s.trim().toLowerCase())
+            .map((s) => {
+              return toLowerCase ? s.trim().toLowerCase() : s.trim()
+            })
         : []
 
-    const families = transform(family)
-    const anchors = transform(anchor)
-    const bindings = transform(binding)
+    const families = transform(family, ' ', true)
+    const anchors = transform(anchor, ' ', true)
+    const bindings = transform(binding, ' ', true)
     const notes = transform(note, '\n')
     if (!localName.includes(' ')) {
-      if (!families.includes(localName)) {
-        families.unshift(localName)
+      const tempName = localName.toLowerCase()
+      if (!families.includes(tempName)) {
+        families.unshift(tempName)
       } else if (!anchors.length) {
-        anchors.push(localName)
+        anchors.push(tempName)
       }
     }
 
