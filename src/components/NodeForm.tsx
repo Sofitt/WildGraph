@@ -113,6 +113,8 @@ export const NodeForm: FC<NodeFormProps> = ({
   const reset = () => {
     setName('')
     setFamily('')
+    setAnchor('')
+    setBinding('')
     setNote('')
     setColor('#ff0000')
     firstField.current?.focus()
