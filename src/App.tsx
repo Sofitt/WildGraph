@@ -9,10 +9,10 @@ import { Settings } from '@/components/Settings.tsx'
 import { SearchBar } from '@/components/SearchBar.tsx'
 
 const FamilyList: FC<{ list: string[] }> = ({ list }) => {
-  const [showFamilyList, toggleFamilyList] = useState<boolean>(false)
+  const [showFamilyList, setFamilyList] = useState<boolean>(false)
   return (
     <div className='floating max-h-[40vh] overflow-y-auto'>
-      <button onClick={() => toggleFamilyList((prev) => !prev)}>
+      <button onClick={() => setFamilyList((prev) => !prev)}>
         Список семейств - {list.length}
       </button>
       {showFamilyList && (
@@ -40,7 +40,8 @@ function App() {
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add')
   const [searchQuery, setQuery] = useState<string[]>([])
 
-  const { graphData, updateLinks, saveData, setGraphData, saveToFile, familyList } = graphUse
+  const { graphData, updateLinks, saveData, setGraphData, saveToFile, loadFromFile, familyList } =
+    graphUse
 
   const setEditNode = (node: NodeType | null) => {
     setFormMode('edit')
@@ -65,6 +66,7 @@ function App() {
         toggle3D={() => setIs3D((prev) => !prev)}
         updateGraph={updateGraph}
         saveToFile={saveToFile}
+        loadFromFile={loadFromFile}
       />
       <SearchBar
         className='max-2xl:hidden absolute top-4 left-1/2 -translate-x-1/2'

@@ -3,6 +3,7 @@ import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
 import { useNodeAdapter } from '@/components/hooks/main/useNodeAdapter.ts'
 import { uniqArrByKey } from '@/lib/uniqArrByKey.ts'
+import { GraphDataAdapter } from '@/lib/adapter/GraphData.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>
 export function useGraphData() {
@@ -14,25 +15,24 @@ export function useGraphData() {
     return [...new Set(graphData.nodes.flatMap((node) => node.family))]
   }, [graphData])
 
+  const loadData = (payload?: GraphData) => {
+    const stored = localStorage.getItem('nodesData')
+    if (!stored && !payload) return
+
+    const data = payload || JSON.parse(stored as string)
+    // Сброс позиции, если точки за пределами экрана
+    data.nodes = data.nodes.map(useNodeAdapter)
+    data.nodes.forEach((n: NodeType) => {
+      if (n.x < 0 || n.x > width || n.y < 0 || n.y > height) {
+        n.x = width / 2
+        n.y = height / 2
+      }
+    })
+    updateLinks(data)
+    setGraphData(data)
+  }
   // Загрузка данных из localStorage
   useEffect(() => {
-    const loadData = () => {
-      const stored = localStorage.getItem('nodesData')
-      if (!stored) return
-
-      const data = JSON.parse(stored)
-      // Сброс позиции, если точки за пределами экрана
-      data.nodes = data.nodes.map(useNodeAdapter)
-      data.nodes.forEach((n: NodeType) => {
-        if (n.x < 0 || n.x > width || n.y < 0 || n.y > height) {
-          n.x = width / 2
-          n.y = height / 2
-        }
-      })
-      updateLinks(data)
-      setGraphData(data)
-    }
-
     loadData()
   }, [width, height])
 
@@ -44,8 +44,44 @@ export function useGraphData() {
   const saveToFile = () => {
     Save.toFile(graphData)
   }
+  const loadFromFile = async () => {
+    try {
+      const json = await new Promise((resolve, reject) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'application/json'
+        input.onchange = async (e) => {
+          // @ts-ignore
+          const file = e?.target?.files?.[0]
+          if (!file) {
+            reject(new Error('Файл не выбран'))
+            return
+          }
+          try {
+            const text = await file.text()
+            const json = JSON.parse(text)
+            resolve(json)
+          } catch (err) {
+            reject(err)
+          }
+        }
+        input.click()
+      })
+      if (
+        typeof json === 'object' &&
+        (!Object.hasOwn(json as object, 'nodes') || !Object.hasOwn(json as object, 'links'))
+      )
+        return
+      const data = GraphDataAdapter(json) as GraphData
+      loadData(data)
+      saveData(data)
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const addNode = (updatedNode: NodeType) => {
+    updatedNode.isCentral = !graphData.nodes.length
     updatedNode.x = width / 2
     updatedNode.y = height / 2
     updatedNode.z = Math.random() * 200 - 100
@@ -105,6 +141,7 @@ export function useGraphData() {
     setGraphData,
     saveData,
     saveToFile,
+    loadFromFile,
     editNode,
     addNode,
     deleteNode,

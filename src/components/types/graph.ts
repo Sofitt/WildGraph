@@ -13,6 +13,7 @@ export interface NodeType {
   notes: string[]
   join: NodeType[]
   size: number | 5
+  isCentral: boolean
 }
 
 export interface GraphData<N = NodeType> {
