@@ -22,12 +22,12 @@ export const Settings: FC<{ className?: string }> = ({ className = '' }) => {
       style={{
         translate: showBlock ? '0 0' : '0 calc(100% - 46px)',
       }}
-      className={`settings z-[1] absolute left-4 bottom-2 bg-white max-2xl:-mx-2 p-2 max-h-[400px] overflow-y-auto grid gap-2 w-full max-w-[calc(100%-16px)] ${className}`}
+      className={`settings z-[1] absolute left-4 bottom-2 max-2xl:-mx-2 p-2 max-h-[400px] overflow-y-auto grid gap-2 w-full max-w-[calc(100%-16px)] ${className}`}
     >
       <button className='w-fit' onClick={() => setShowBlock((prev) => !prev)}>
         <span className={`block ${showBlock ? 'rotate-180' : ''}`}>⬆️</span>
       </button>
-      <div className='p-2 border border-solid w-fit flex'>
+      <div className='p-2 border border-solid w-fit flex bg-white'>
         <span
           className='icon'
           style={
@@ -40,7 +40,7 @@ export const Settings: FC<{ className?: string }> = ({ className = '' }) => {
           }
         />
       </div>
-      <div className='grid gap-2 max-h-[250px]'>
+      <div className='grid gap-2 max-h-[250px] bg-white px-2 border border-solid border-white'>
         {Object.keys(definitionMap).map((key) => {
           const inputMap = {
             boolean: 'checkbox',

@@ -8,6 +8,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
 import { NodeType } from '@/components/types/graph.ts'
 import { useGlobal } from '@/components/hooks/3d/useGlobal.ts'
+// import { useSphericalLayout } from '@/components/hooks/3d/useSphericalLayout.ts'
 
 export interface Node3D extends NodeType {
   join: Node3D[]
@@ -61,6 +62,9 @@ const Graph3D: FC<Graph3DProps> = ({ onEditNode, graphUse, searchQuery }) => {
       containerRef.current.style.position = 'relative'
       containerRef.current.appendChild(renderer.domElement)
     }
+
+    // const updatedData = useSphericalLayout(graphUse.graphData)
+    // graphUse.setGraphData(updatedData)
 
     const nodes: Node3D[] = graphUse.graphData.nodes
     const links: Link3D[] = graphUse.graphData.links

@@ -36,21 +36,33 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
 
   useEffect(() => {
     const repulsionInput = document.getElementById('repulsionRange') as HTMLInputElement
-    let repulsionStrength = +repulsionInput.value
+    let repulsionStrength = -120 // +repulsionInput.value
 
     // Создание симуляции
     simulationRef.current = d3
       .forceSimulation(graphData.nodes)
-      .force('charge', d3.forceManyBody().strength(repulsionStrength))
+      .force(
+        'charge',
+        d3.forceManyBody().strength((d) => {
+          // TODO Завязаться за join. Но он пока пустой
+          console.log('dd', d)
+          return repulsionStrength
+        }),
+      )
       .force(
         'link',
         d3
           .forceLink(graphData.links)
           .id((d: any) => d.name)
-          .distance((d) => 100 + d.source.size * 5),
+          // .distance((d) => 100 + d.source.size * 5)
+          .distance((d) => {
+            // console.log('d', d)
+            return 100 + d.source.join.length * 5
+          })
+          .iterations(10),
       )
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('z', forceZRepulsion())
+    // .force('z', forceZRepulsion())
 
     // Обработчик изменения силы отталкивания
     const handleRepulsionChange = () => {

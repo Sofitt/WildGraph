@@ -9,6 +9,7 @@ interface NodeFormProps {
   onClose: () => void
   onDelete?: (node: NodeType) => void
   graphData: GraphData
+  className?: string
 }
 
 export const NodeForm: FC<NodeFormProps> = ({
@@ -18,6 +19,7 @@ export const NodeForm: FC<NodeFormProps> = ({
   onSave,
   onClose,
   onDelete,
+  className = '',
 }) => {
   const [name, setName] = useState<string>('')
   const [family, setFamily] = useState<string>('')
@@ -169,6 +171,7 @@ export const NodeForm: FC<NodeFormProps> = ({
       binding: bindings,
       notes,
       color,
+      isCentral: !graphData.nodes.length,
     }
 
     onSave(updatedNode)
@@ -180,7 +183,7 @@ export const NodeForm: FC<NodeFormProps> = ({
   }
 
   return (
-    <div className='floating grid'>
+    <div className={'floating grid ' + className}>
       <h3 className='mb-4'>{mode === 'add' ? 'Добавить узел' : 'Редактировать узел'}</h3>
       <form onSubmit={handleSubmit} className='grid gap-2'>
         {fields.map((f) => {

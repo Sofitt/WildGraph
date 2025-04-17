@@ -8,10 +8,10 @@ import { useGraphData } from '@/components/hooks/main/useGraphData.ts'
 import { Settings } from '@/components/Settings.tsx'
 import { SearchBar } from '@/components/SearchBar.tsx'
 
-const FamilyList: FC<{ list: string[] }> = ({ list }) => {
+const FamilyList: FC<{ list: string[]; className?: string }> = ({ list, className }) => {
   const [showFamilyList, setFamilyList] = useState<boolean>(false)
   return (
-    <div className='floating max-h-[40vh] overflow-y-auto'>
+    <div className={'floating max-h-[40vh] overflow-y-auto ' + className}>
       <button onClick={() => setFamilyList((prev) => !prev)}>
         Список семейств - {list.length}
       </button>
@@ -78,17 +78,19 @@ function App() {
       ) : (
         <Graph2D graphUse={graphUse} onEditNode={setEditNode} searchQuery={searchQuery} />
       )}
-      <div className='z-[1] flex flex-wrap md:flex-row-reverse items-start 2xl:grid top-4 left-4 gap-4 modal max-2xl:w-[calc(100%-32px)] justify-between max-h-[40vh]'>
+      <div className='pointer-events-none z-[1] flex flex-wrap md:flex-row-reverse items-start 2xl:grid top-4 left-4 gap-4 modal max-2xl:w-[calc(100%-32px)] justify-between max-h-[40vh]'>
         <ControlPanel
-          className='2xl:!hidden !static'
+          className='2xl:!hidden !static pointer-events-auto'
           toggle3D={() => setIs3D((prev) => !prev)}
           updateGraph={updateGraph}
           saveToFile={saveToFile}
+          loadFromFile={loadFromFile}
         />
-        <SearchBar className='2xl:!hidden' emitter={setQuery} />
-        <FamilyList list={familyList} />
+        <SearchBar className='2xl:!hidden pointer-events-auto' emitter={setQuery} />
+        <FamilyList list={familyList} className='pointer-events-auto' />
         {nodeFormVisible && (
           <NodeForm
+            className='pointer-events-auto'
             graphData={graphData}
             node={nodeToForm}
             mode={formMode}

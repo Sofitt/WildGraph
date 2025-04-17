@@ -42,7 +42,7 @@ const Dropdown = ({
       {open && (
         <div
           ref={dropdownRef}
-          className={`absolute top-full py-2 bg-white shadow-lg rounded ${
+          className={`absolute top-full bg-white shadow-lg rounded ${
             alignRight ? 'right-0' : 'left-0'
           }`}
         >
