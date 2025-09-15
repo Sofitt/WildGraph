@@ -72,10 +72,14 @@ export function useGraphRendering(
     // @ts-ignore
     svg.call(zoom)
 
-    // Восстанавливаем сохраненную трансформацию, если она есть
+    // Восстанавливаем сохраненную трансформацию при инициализации
     if (zoomTransformRef.current) {
-      // @ts-ignore
-      svg.call(zoom.transform, zoomTransformRef.current)
+      requestAnimationFrame(() => {
+        if (zoomTransformRef.current) {
+          // @ts-ignore
+          svg.call(zoom.transform, zoomTransformRef.current)
+        }
+      })
     }
 
     // Создание элементов связей
@@ -194,6 +198,8 @@ export function useGraphRendering(
     simulationRef.current.on('tick', ticked)
     simulationRef.current.on('end', ticked)
     simulationRef.current.alpha(1).restart()
+
+    // НЕ восстанавливаем зум при каждом обновлении данных - только при инициализации
 
     return () => {
       simulationRef.current!.on('tick', null)

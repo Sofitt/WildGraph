@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
 import { useNodeAdapter } from '@/components/hooks/main/useNodeAdapter.ts'
@@ -7,9 +7,11 @@ import { GraphDataAdapter } from '@/lib/adapter/GraphData.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>
 export function useGraphData() {
-  const width = window.innerWidth
-  const height = window.innerHeight
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  })
 
   const familyList = useMemo(() => {
     return [...new Set(graphData.nodes.flatMap((node) => node.family))]
@@ -23,18 +25,34 @@ export function useGraphData() {
     // Сброс позиции, если точки за пределами экрана
     data.nodes = data.nodes.map(useNodeAdapter)
     data.nodes.forEach((n: NodeType) => {
-      if (n.x < 0 || n.x > width || n.y < 0 || n.y > height) {
-        n.x = width / 2
-        n.y = height / 2
+      if (n.x < 0 || n.x > windowSize.width || n.y < 0 || n.y > windowSize.height) {
+        n.x = windowSize.width / 2
+        n.y = windowSize.height / 2
       }
     })
     updateLinks(data)
     setGraphData(data)
   }
-  // Загрузка данных из localStorage
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Загрузка данных из localStorage только при монтировании
   useEffect(() => {
     loadData()
-  }, [width, height])
+  }, [])
+
+  // НЕ корректируем позиции автоматически при ресайзе - это может вызывать ненужные перерендеры
+  // Коррекция позиций происходит только при загрузке данных из localStorage
 
   const saveData = (data?: GraphData) => {
     const temp = data || graphData
