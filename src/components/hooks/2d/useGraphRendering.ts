@@ -1,4 +1,4 @@
-import { useEffect, RefObject } from 'react'
+import { useEffect, RefObject, useRef } from 'react'
 import * as d3 from 'd3'
 import { GraphData, NodeType } from '../../types/graph.ts'
 
@@ -11,7 +11,12 @@ export function useGraphRendering(
   setEditNode: (node: NodeType | null) => void,
   saveData: (data?: GraphData) => void,
   searchQuery: string[],
+  onNodeHover?: (node: NodeType | null, event?: MouseEvent) => void,
+  externalZoomTransformRef?: React.MutableRefObject<d3.ZoomTransform | null>,
 ) {
+  const localZoomTransformRef = useRef<d3.ZoomTransform | null>(null)
+  const zoomTransformRef = externalZoomTransformRef || localZoomTransformRef
+
   useEffect(() => {
     if (!svgRef.current || !simulationRef.current) return
 
@@ -44,9 +49,18 @@ export function useGraphRendering(
       .scaleExtent([0.5, 4]) // можно настроить минимальный и максимальный зум
       .on('zoom', (event) => {
         group.attr('transform', event.transform)
+        // Сохраняем текущую трансформацию
+        zoomTransformRef.current = event.transform
       })
+
     // @ts-ignore
     svg.call(zoom)
+
+    // Восстанавливаем сохраненную трансформацию, если она есть
+    if (zoomTransformRef.current) {
+      // @ts-ignore
+      svg.call(zoom.transform, zoomTransformRef.current)
+    }
 
     // Создание элементов связей
     const linkElements = group
@@ -110,7 +124,7 @@ export function useGraphRendering(
       saveData()
     }
 
-    const mouseOver = (_: any, d: NodeType) => {
+    const mouseOver = (event: any, d: NodeType) => {
       // @ts-ignore
       nodeElements.classed(
         'highlight',
@@ -118,11 +132,40 @@ export function useGraphRendering(
       )
 
       linkElements.classed('highlight', (o) => o.source.name === d.name || o.target.name === d.name)
+
+      if (onNodeHover) {
+        let mouseEvent = undefined
+
+        if (
+          event.sourceEvent &&
+          event.sourceEvent.clientX !== undefined &&
+          event.sourceEvent.clientY !== undefined
+        ) {
+          mouseEvent = {
+            clientX: event.sourceEvent.clientX,
+            clientY: event.sourceEvent.clientY,
+          }
+        } else {
+          const svgRect = svgRef.current?.getBoundingClientRect()
+          if (svgRect && d.x !== undefined && d.y !== undefined) {
+            mouseEvent = {
+              clientX: svgRect.left + d.x,
+              clientY: svgRect.top + d.y,
+            }
+          }
+        }
+
+        onNodeHover(d, mouseEvent)
+      }
     }
 
     const mouseOut = () => {
       nodeElements.classed('highlight', false)
       linkElements.classed('highlight', false)
+
+      if (onNodeHover) {
+        onNodeHover(null)
+      }
     }
 
     nodeElements
@@ -140,17 +183,17 @@ export function useGraphRendering(
       window.removeEventListener('resize', onResize)
       simulationRef.current!.on('tick', null)
     }
-  }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData])
+  }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData, onNodeHover])
 
-  // Отдельный useEffect для обработки поиска и сброса трансформации группы:
+  // Отдельный useEffect для обработки поиска (НЕ сбрасываем зум-трансформацию):
   useEffect(() => {
     if (!svgRef.current) return
 
     const svg = d3.select(svgRef.current)
     const group = svg.select('g#graphGroup')
-    // Если нет поискового запроса, сбрасываем трансформацию
+
+    // Если нет поискового запроса, НЕ сбрасываем трансформацию (сохраняем зум)
     if (!searchQuery || (Array.isArray(searchQuery) && searchQuery.length === 0)) {
-      group.attr('transform', '')
       return
     }
 
@@ -162,11 +205,20 @@ export function useGraphRendering(
     )
 
     if (targetNode) {
-      const translateX = width / 2 - targetNode.x
-      const translateY = height / 2 - targetNode.y
-      group.attr('transform', `translate(${translateX}, ${translateY})`)
-    } else {
-      group.attr('transform', '')
+      // Применяем поисковую трансформацию поверх текущего зума
+      const currentTransform = zoomTransformRef.current || d3.zoomIdentity
+      const searchTransform = d3.zoomIdentity.translate(
+        width / 2 - targetNode.x,
+        height / 2 - targetNode.y,
+      )
+
+      // Комбинируем зум и поисковую трансформацию
+      const combinedTransform = currentTransform.translate(
+        searchTransform.x / currentTransform.k,
+        searchTransform.y / currentTransform.k,
+      )
+
+      group.attr('transform', combinedTransform.toString())
     }
-  }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData])
+  }, [searchQuery, graphData, width, height])
 }

@@ -25,8 +25,6 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
       .force(
         'charge',
         d3.forceManyBody().strength((d) => {
-          // TODO Завязаться за join. Но он пока пустой
-          console.log('dd', d)
           // @ts-ignore
           return (d.joinLength + 10) * -20
           // return repulsionStrength - d.joinLength
