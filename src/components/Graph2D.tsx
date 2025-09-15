@@ -15,9 +15,24 @@ type Props = {
 }
 
 const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
-  const width = window.innerWidth
-  const height = window.innerHeight
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  })
 
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const { width, height } = windowSize
   const svgRef = useRef<SVGSVGElement>(null)
   const zoomTransformRef = useRef<ZoomTransform | null>(null)
 

@@ -17,8 +17,18 @@ export function useGraphRendering(
   const localZoomTransformRef = useRef<d3.ZoomTransform | null>(null)
   const zoomTransformRef = externalZoomTransformRef || localZoomTransformRef
 
+  const setEditNodeRef = useRef(setEditNode)
+  const saveDataRef = useRef(saveData)
+  const onNodeHoverRef = useRef(onNodeHover)
+
   useEffect(() => {
-    if (!svgRef.current || !simulationRef.current) return
+    setEditNodeRef.current = setEditNode
+    saveDataRef.current = saveData
+    onNodeHoverRef.current = onNodeHover
+  })
+
+  useEffect(() => {
+    if (!svgRef.current) return
 
     const svg = d3.select(svgRef.current).attr('width', width).attr('height', height)
 
@@ -26,13 +36,7 @@ export function useGraphRendering(
       const newWidth = window.innerWidth
       const newHeight = window.innerHeight
       d3.select(svgRef.current).attr('width', newWidth).attr('height', newHeight)
-      const group = svgRef.current?.querySelector('g#graphGroup') as SVGGElement
-      if (group) {
-        // центрирование
-        const translateX = (newWidth - width) / 2
-        const translateY = (newHeight - height) / 2
-        group.setAttribute('transform', `translate(${translateX}, ${translateY})`)
-      }
+      // НЕ трогаем transform группы - это управляется зумом
     }
 
     window.addEventListener('resize', onResize)
@@ -40,9 +44,21 @@ export function useGraphRendering(
     let group = svg.select<SVGGElement>('g#graphGroup')
     if (group.empty()) {
       group = svg.append('g').attr('id', 'graphGroup')
-    } else {
-      group.selectAll('*').remove()
     }
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+    }
+  }, [width, height])
+
+  useEffect(() => {
+    if (!svgRef.current || !simulationRef.current) return
+
+    const svg = d3.select(svgRef.current)
+    let group = svg.select<SVGGElement>('g#graphGroup')
+
+    // Очищаем только при изменении данных графа
+    group.selectAll('*').remove()
 
     const zoom = d3
       .zoom()
@@ -121,7 +137,7 @@ export function useGraphRendering(
       if (!event.active) simulationRef.current!.alphaTarget(0)
       d.fx = null
       d.fy = null
-      saveData()
+      saveDataRef.current()
     }
 
     const mouseOver = (event: any, d: NodeType) => {
@@ -133,7 +149,7 @@ export function useGraphRendering(
 
       linkElements.classed('highlight', (o) => o.source.name === d.name || o.target.name === d.name)
 
-      if (onNodeHover) {
+      if (onNodeHoverRef.current) {
         let mouseEvent = undefined
 
         if (
@@ -155,7 +171,7 @@ export function useGraphRendering(
           }
         }
 
-        onNodeHover(d, mouseEvent)
+        onNodeHoverRef.current(d, mouseEvent)
       }
     }
 
@@ -163,8 +179,8 @@ export function useGraphRendering(
       nodeElements.classed('highlight', false)
       linkElements.classed('highlight', false)
 
-      if (onNodeHover) {
-        onNodeHover(null)
+      if (onNodeHoverRef.current) {
+        onNodeHoverRef.current(null)
       }
     }
 
@@ -173,17 +189,72 @@ export function useGraphRendering(
       .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended))
       .on('mouseover', mouseOver)
       .on('mouseout', mouseOut)
-      .on('click', (_, d) => setEditNode(d))
+      .on('click', (_, d) => setEditNodeRef.current(d))
 
     simulationRef.current.on('tick', ticked)
     simulationRef.current.on('end', ticked)
     simulationRef.current.alpha(1).restart()
 
     return () => {
-      window.removeEventListener('resize', onResize)
       simulationRef.current!.on('tick', null)
     }
-  }, [svgRef, simulationRef, graphData, width, height, setEditNode, saveData, onNodeHover])
+  }, [graphData])
+
+  // Отдельный useEffect для синхронизации D3 элементов с симуляцией при изменении размеров
+  useEffect(() => {
+    if (!svgRef.current || !simulationRef.current) return
+
+    const svg = d3.select(svgRef.current)
+    const group = svg.select<SVGGElement>('g#graphGroup')
+
+    if (group.empty()) return
+
+    const nodeElements = group.selectAll('.node')
+    const linkElements = group.selectAll('.link')
+    const textElements = group.selectAll('.nodelabel')
+
+    // Переподключаем drag к нодам после изменения размеров
+    if (!nodeElements.empty()) {
+      const dragstarted = (event: any, d: any) => {
+        if (!event.active) simulationRef.current!.alphaTarget(0.3).restart()
+        d.fx = d.x
+        d.fy = d.y
+      }
+
+      const dragged = (event: any, d: any) => {
+        d.fx = event.x
+        d.fy = event.y
+      }
+
+      const dragended = (event: any, d: any) => {
+        if (!event.active) simulationRef.current!.alphaTarget(0)
+        d.fx = null
+        d.fy = null
+        saveDataRef.current()
+      }
+
+      // Переподключаем drag обработчики
+      nodeElements
+        // @ts-ignore
+        .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended))
+    }
+
+    // Обновляем tick функцию для новой симуляции
+    const ticked = () => {
+      linkElements
+        .attr('x1', (d: any) => d.source.x)
+        .attr('y1', (d: any) => d.source.y)
+        .attr('x2', (d: any) => d.target.x)
+        .attr('y2', (d: any) => d.target.y)
+
+      nodeElements.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y)
+
+      textElements.attr('x', (d: any) => d.x).attr('y', (d: any) => d.y + 10)
+    }
+
+    simulationRef.current.on('tick', ticked)
+    simulationRef.current.on('end', ticked)
+  }, [width, height])
 
   // Отдельный useEffect для обработки поиска (НЕ сбрасываем зум-трансформацию):
   useEffect(() => {
