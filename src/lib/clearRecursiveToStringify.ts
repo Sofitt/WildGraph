@@ -9,10 +9,12 @@ export const clearRecursiveToStringify = (data: GraphData<Node3D>) => {
       source: {
         ...link.source,
         join: [],
+        joinLength: link.source.join.length,
       },
       target: {
         ...link.target,
         join: [],
+        joinLength: link.target.join.length,
       },
     }
     delete computedLink.source.mesh3D
@@ -27,6 +29,7 @@ export const clearRecursiveToStringify = (data: GraphData<Node3D>) => {
     const computedNode = {
       ...node,
       join: [],
+      joinLength: node.join.length,
     }
 
     delete computedNode.mesh3D

@@ -12,6 +12,7 @@ export interface NodeType {
   color: string
   notes: string[]
   join: NodeType[]
+  joinLength?: number
   size: number | 5
   isCentral: boolean
 }

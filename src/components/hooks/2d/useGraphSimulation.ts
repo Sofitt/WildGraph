@@ -5,39 +5,20 @@ import { GraphData } from '../../types/graph.ts'
 export function useGraphSimulation(graphData: GraphData, width: number, height: number) {
   const simulationRef = useRef<d3.Simulation<any, undefined>>(null)
 
-  function forceZRepulsion() {
-    let nodes: any
-    function force(alpha: number) {
-      nodes.forEach((node: any) => {
-        let netForce = 0
-        nodes.forEach((other: any) => {
-          if (node === other) return
-          const dz = node.z - other.z
-          const distance = Math.abs(dz) || 1e-6
-          const k = 10 // коэффициент, можно настроить
-          netForce += (dz / distance) * ((k * alpha) / (distance * distance))
-        })
-        node.vz = (node.vz || 0) + netForce
-        node.z = (node.z || 0) + node.vz
-        node.vz *= 0.9 // затухание
-      })
-    }
-    force.initialize = function (_nodes: any) {
-      nodes = _nodes
-      nodes.forEach((node: any) => {
-        if (node.z === undefined) {
-          node.z = Math.random() * 100 - 100
-        }
-        node.vz = 0
-      })
-    }
-    return force
+  // начиная с этой строки: функция для расчёта z координат
+  function calculateZCoordinates(nodes: GraphData['nodes'], depth: number = 500): void {
+    const maxJoin = Math.max(...nodes.map((d) => d.joinLength ?? 0)) || 1
+    nodes.forEach((d) => {
+      const join = d.joinLength ?? 0
+      d.z = (join / maxJoin) * depth - depth / 2
+    })
   }
 
   useEffect(() => {
     const repulsionInput = document.getElementById('repulsionRange') as HTMLInputElement
     let repulsionStrength = -120 // +repulsionInput.value
 
+    calculateZCoordinates(graphData.nodes)
     // Создание симуляции
     simulationRef.current = d3
       .forceSimulation(graphData.nodes)
@@ -46,7 +27,9 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
         d3.forceManyBody().strength((d) => {
           // TODO Завязаться за join. Но он пока пустой
           console.log('dd', d)
-          return repulsionStrength
+          // @ts-ignore
+          return (d.joinLength + 10) * -20
+          // return repulsionStrength - d.joinLength
         }),
       )
       .force(
@@ -57,12 +40,11 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
           // .distance((d) => 100 + d.source.size * 5)
           .distance((d) => {
             // console.log('d', d)
-            return 100 + d.source.join.length * 5
+            return 100 + d.source.joinLength * 5
           })
           .iterations(10),
       )
       .force('center', d3.forceCenter(width / 2, height / 2))
-    // .force('z', forceZRepulsion())
 
     // Обработчик изменения силы отталкивания
     const handleRepulsionChange = () => {
@@ -83,7 +65,7 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
   // Обновление симуляции при изменении данных
   useEffect(() => {
     if (!simulationRef.current) return
-
+    calculateZCoordinates(graphData.nodes)
     simulationRef.current.nodes(graphData.nodes)
 
     const linkForce = simulationRef.current.force('link') as d3.ForceLink<any, any>
