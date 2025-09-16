@@ -9,6 +9,7 @@ function createNode(data: any & object): NodeType {
     fx: data.fx || null,
     fy: data.fy || null,
     name: data.name,
+    quality: data.quality || '',
     family: data.family,
     anchor: data.anchor,
     binding: data.binding,

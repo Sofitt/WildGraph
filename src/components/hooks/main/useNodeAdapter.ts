@@ -10,7 +10,8 @@ export const useNodeAdapter = (node: Partial<NodeType>) => {
     fx: null,
     fy: null,
     name: 'template',
-    family: ['template'],
+    quality: '',
+    family: [],
     anchor: [],
     binding: [],
     color: '',
@@ -25,7 +26,10 @@ export const useNodeAdapter = (node: Partial<NodeType>) => {
       template[key] = 0
     }
     // Защита от NaN значений для координат
-    if ((key === 'x' || key === 'y' || key === 'z') && (typeof template[key] !== 'number' || isNaN(template[key]))) {
+    if (
+      (key === 'x' || key === 'y' || key === 'z') &&
+      (typeof template[key] !== 'number' || isNaN(template[key]))
+    ) {
       template[key] = 0
     }
   }
