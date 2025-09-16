@@ -143,12 +143,11 @@ export const NodeForm: FC<NodeFormProps> = ({
     const anchors = transform(anchor, ' ', true)
     const bindings = transform(binding, ' ', true)
     const notes = transform(note, '\n')
-    if (!localName.includes(' ')) {
-      const tempName = localName.toLowerCase()
-      if (!families.includes(tempName)) {
-        families.unshift(tempName)
-      } else if (!anchors.length) {
-        anchors.push(tempName)
+
+    if (!/\(\w*\)/.test(localName)) {
+      const formattedName = localName.toLowerCase().split(' ').join('_')
+      if (!anchors.includes(formattedName)) {
+        anchors.unshift(formattedName)
       }
     }
 

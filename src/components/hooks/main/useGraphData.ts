@@ -119,7 +119,6 @@ export function useGraphData() {
   const editNode = (updatedNode: NodeType) => {
     const newData = { ...graphData }
     updatedNode = useNodeAdapter(updatedNode)
-
     // ВАЖНО: Обновляем существующий объект вместо замены, чтобы сохранить ссылки D3
     newData.nodes = newData.nodes.map((n) => {
       if (n.id === updatedNode.id) {
