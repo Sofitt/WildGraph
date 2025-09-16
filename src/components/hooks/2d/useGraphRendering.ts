@@ -168,9 +168,13 @@ export function useGraphRendering(
         } else {
           const svgRect = svgRef.current?.getBoundingClientRect()
           if (svgRect && d.x !== undefined && d.y !== undefined) {
+            const transform = zoomTransformRef.current || d3.zoomIdentity
+            const transformedX = transform.applyX(d.x)
+            const transformedY = transform.applyY(d.y)
+
             mouseEvent = {
-              clientX: svgRect.left + d.x,
-              clientY: svgRect.top + d.y,
+              clientX: svgRect.left + transformedX,
+              clientY: svgRect.top + transformedY,
             }
           }
         }

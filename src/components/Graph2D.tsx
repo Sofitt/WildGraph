@@ -40,6 +40,8 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
     connections: PortalConnection[]
     position: { x: number; y: number }
   } | null>(null)
+  const portalTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { graphData, saveData } = graphUse
   const { getPortalConnections, isPortalNode } = usePortals(graphData)
@@ -55,8 +57,20 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
 
   const handleNodeHover = useCallback(
     (node: NodeType | null, event?: MouseEvent) => {
+      if (portalTimeoutRef.current) {
+        clearTimeout(portalTimeoutRef.current)
+        portalTimeoutRef.current = null
+      }
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
+
       if (!node || !isPortalNode(node.id)) {
-        setPortalMenu(null)
+        closeTimeoutRef.current = setTimeout(() => {
+          setPortalMenu(null)
+          closeTimeoutRef.current = null
+        }, 500)
         return
       }
 
@@ -72,8 +86,16 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
           connections,
           position: { x: event.clientX, y: event.clientY },
         })
+
+        portalTimeoutRef.current = setTimeout(() => {
+          setPortalMenu(null)
+          portalTimeoutRef.current = null
+        }, 3000)
       } else {
-        setPortalMenu(null)
+        closeTimeoutRef.current = setTimeout(() => {
+          setPortalMenu(null)
+          closeTimeoutRef.current = null
+        }, 500)
       }
     },
     [isPortalNode, getPortalConnections],
@@ -81,6 +103,14 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
 
   const handlePortalSelect = useCallback(
     (nodeId: number) => {
+      if (portalTimeoutRef.current) {
+        clearTimeout(portalTimeoutRef.current)
+        portalTimeoutRef.current = null
+      }
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current)
+        closeTimeoutRef.current = null
+      }
       const targetNode = graphData.nodes.find((n) => n.id === nodeId)
       if (targetNode) {
         onEditNode(targetNode)
@@ -91,7 +121,23 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
   )
 
   const handleClosePortalMenu = useCallback(() => {
+    if (portalTimeoutRef.current) {
+      clearTimeout(portalTimeoutRef.current)
+      portalTimeoutRef.current = null
+    }
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
     setPortalMenu(null)
+  }, [])
+
+  const handlePortalMenuMouseEnter = useCallback(() => {
+    // Отменяем таймер закрытия при наведении на портал
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
   }, [])
 
   useGraphRendering(
@@ -117,6 +163,7 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
             position={portalMenu.position}
             onPortalSelect={handlePortalSelect}
             onClose={handleClosePortalMenu}
+            onMouseEnter={handlePortalMenuMouseEnter}
           />,
           document.body,
         )}
