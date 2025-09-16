@@ -266,14 +266,14 @@ export function useGraphRendering(
     simulationRef.current.on('end', ticked)
   }, [width, height])
 
-  // Отдельный useEffect для обработки поиска (НЕ сбрасываем зум-трансформацию):
+  // Отдельный useEffect для обработки поиска
   useEffect(() => {
     if (!svgRef.current) return
 
     const svg = d3.select(svgRef.current)
     const group = svg.select('g#graphGroup')
 
-    // Если нет поискового запроса, НЕ сбрасываем трансформацию (сохраняем зум)
+    // Если нет поискового запроса, ничего не делаем
     if (!searchQuery || (Array.isArray(searchQuery) && searchQuery.length === 0)) {
       return
     }
@@ -285,21 +285,29 @@ export function useGraphRendering(
       queries.every((q) => n.family.some((f) => f.toLowerCase().includes(q))),
     )
 
-    if (targetNode) {
-      // Применяем поисковую трансформацию поверх текущего зума
-      const currentTransform = zoomTransformRef.current || d3.zoomIdentity
-      const searchTransform = d3.zoomIdentity.translate(
-        width / 2 - targetNode.x,
-        height / 2 - targetNode.y,
-      )
+    if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined) {
+      // Вычисляем новую трансформацию для центрирования узла
+      const scale = zoomTransformRef.current?.k || 1
+      const newTransform = d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(scale)
+        .translate(-targetNode.x, -targetNode.y)
 
-      // Комбинируем зум и поисковую трансформацию
-      const combinedTransform = currentTransform.translate(
-        searchTransform.x / currentTransform.k,
-        searchTransform.y / currentTransform.k,
-      )
-
-      group.attr('transform', combinedTransform.toString())
+      // Применяем трансформацию напрямую к группе с анимацией
+      group.transition()
+        .duration(750)
+        .attr('transform', newTransform.toString())
+        .on('end', () => {
+          // Сохраняем новую трансформацию
+          zoomTransformRef.current = newTransform
+          
+          // Синхронизируем zoom behavior с новой трансформацией
+          // Получаем zoom behavior из SVG и обновляем его внутреннее состояние
+          const zoomBehavior = svg.node().__zoom
+          if (zoomBehavior) {
+            svg.node().__zoom = newTransform
+          }
+        })
     }
   }, [searchQuery, graphData, width, height])
 }
