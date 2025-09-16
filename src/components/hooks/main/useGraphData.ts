@@ -81,6 +81,7 @@ export function useGraphData() {
   }
 
   if (typeof window !== 'undefined') {
+    // в обсидиане не работает загрузка файла, поэтому приходится изъёбываться через консоль
     window._Utils = { ...(window._Utils || {}), loadFromData }
   }
 
