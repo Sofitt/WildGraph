@@ -1,23 +1,23 @@
 import { GraphData, NodeType } from '@/components/types/graph'
 
-function createNode(data: any & object): NodeType {
+export function createNode(data: any & object): NodeType {
   return {
     id: data.id,
-    x: data.x,
-    y: data.y,
-    z: data.z,
+    isCentral: data.isCentral || false,
+    x: data.x || 0,
+    y: data.y || 0,
+    z: data.z || 0,
     fx: data.fx || null,
     fy: data.fy || null,
     name: data.name,
     quality: data.quality || '',
-    family: data.family,
-    anchor: data.anchor,
-    binding: data.binding,
-    color: data.color,
-    notes: data.notes,
-    join: data.join,
-    size: data.size,
-    isCentral: data.isCentral,
+    family: data.family || [],
+    anchor: data.anchor || [],
+    binding: data.binding || [],
+    color: data.color || '',
+    notes: data.notes || [],
+    join: data.join || [],
+    size: data.size || 5,
   }
 }
 

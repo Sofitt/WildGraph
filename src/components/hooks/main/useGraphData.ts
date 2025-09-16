@@ -70,6 +70,20 @@ export function useGraphData() {
   const saveToFile = () => {
     Save.toFile(graphData)
   }
+  const loadFromData = (value: any) => {
+    try {
+      const data = GraphDataAdapter(value) as GraphData
+      loadData(data)
+      saveData(data)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window._Utils = { ...(window._Utils || {}), loadFromData }
+  }
+
   const loadFromFile = async () => {
     try {
       const json = await new Promise((resolve, reject) => {
@@ -98,9 +112,7 @@ export function useGraphData() {
         (!Object.hasOwn(json as object, 'nodes') || !Object.hasOwn(json as object, 'links'))
       )
         return
-      const data = GraphDataAdapter(json) as GraphData
-      loadData(data)
-      saveData(data)
+      loadFromData(json)
     } catch (e) {
       console.error(e)
     }
