@@ -1,5 +1,6 @@
 import { type FC, useRef, useState, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import * as d3 from 'd3'
 import { type ZoomTransform } from 'd3-zoom'
 import { type UseGraphData } from '@/components/hooks/main/useGraphData.ts'
 import { useGraphSimulation } from '@/components/hooks/2d/useGraphSimulation'
@@ -101,6 +102,38 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
     [isPortalNode, getPortalConnections],
   )
 
+  const moveToNode = useCallback((targetNode: NodeType) => {
+    if (!svgRef.current || !targetNode.x || !targetNode.y) return
+
+    const svg = d3.select(svgRef.current)
+    const group = svg.select('g#graphGroup')
+
+    // Вычисляем новую трансформацию для центрирования узла
+    const scale = zoomTransformRef.current?.k || 1
+    const newTransform = d3.zoomIdentity
+      .translate(width / 2, height / 2)
+      .scale(scale)
+      .translate(-targetNode.x, -targetNode.y)
+
+    // Применяем трансформацию напрямую к группе с анимацией
+    group
+      .transition()
+      .duration(750)
+      .attr('transform', newTransform.toString())
+      .on('end', () => {
+        // Сохраняем новую трансформацию
+        zoomTransformRef.current = newTransform
+
+        // Синхронизируем zoom behavior с новой трансформацией
+        // @ts-ignore
+        const zoomBehavior = svg.node().__zoom
+        if (zoomBehavior) {
+          // @ts-ignore
+          svg.node().__zoom = newTransform
+        }
+      })
+  }, [width, height])
+
   const handlePortalSelect = useCallback(
     (nodeId: number) => {
       if (portalTimeoutRef.current) {
@@ -113,11 +146,11 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
       }
       const targetNode = graphData.nodes.find((n) => n.id === nodeId)
       if (targetNode) {
-        onEditNode(targetNode)
+        moveToNode(targetNode)
       }
       setPortalMenu(null)
     },
-    [graphData.nodes, onEditNode],
+    [graphData.nodes, moveToNode],
   )
 
   const handleClosePortalMenu = useCallback(() => {
