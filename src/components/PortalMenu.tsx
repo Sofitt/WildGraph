@@ -73,7 +73,7 @@ const PortalMenu: FC<PortalMenuProps> = ({
       onMouseLeave={handleMouseLeave}
     >
       <div className='font-bold mb-2 border-b border-gray-500 pb-1'>
-        Порталы ({connections[0].node.name})
+        Порталы ({connections[0].node.name}{connections[0].node.quality ? ` (${connections[0].node.quality})` : ''})
       </div>
 
       {connections.map((connection) => (

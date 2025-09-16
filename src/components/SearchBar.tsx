@@ -133,7 +133,7 @@ export const SearchBar: FC<Props> = ({ emitter, className = '', nodes = [] }) =>
                   }`}
                   onClick={() => selectSuggestion(node)}
                 >
-                  <div className='font-medium'>{node.name}</div>
+                  <div className='font-medium'>{node.name}{node.quality ? ` (${node.quality})` : ''}</div>
                   {node.family.length > 0 && (
                     <div className='text-sm text-gray-500'>Семейство: {node.family.join(', ')}</div>
                   )}

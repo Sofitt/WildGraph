@@ -124,7 +124,7 @@ export function useGraphRendering(
       .attr('data-is-node-label', 'true')
       .attr('dy', (d) => d.size + 4)
       .attr('text-anchor', 'middle')
-      .text((d) => d.name)
+      .text((d) => d.name + (d.quality ? ` (${d.quality})` : ''))
 
     // Функция обновления позиций элементов
     const ticked = () => {

@@ -6,6 +6,7 @@ export interface NodeType {
   fx?: number | null
   fy?: number | null
   name: string
+  quality: string // Качество узла
   family: string[] // Семейство
   anchor: string[] // Якорь для привязки (binding)
   binding: string[] // Привязка к узлу с указанными якорями

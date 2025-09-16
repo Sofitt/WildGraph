@@ -22,6 +22,7 @@ export const NodeForm: FC<NodeFormProps> = ({
   className = '',
 }) => {
   const [name, setName] = useState<string>('')
+  const [quality, setQuality] = useState<string>('')
   const [family, setFamily] = useState<string>('')
   const [anchor, setAnchor] = useState<string>('')
   const [binding, setBinding] = useState<string>('')
@@ -49,6 +50,19 @@ export const NodeForm: FC<NodeFormProps> = ({
         },
       },
       {
+        title: 'Качество',
+        icon: {
+          symbol: '"?"',
+          content: '"Качество узла"',
+        },
+        input: {
+          placeholder: '',
+          ref: 2,
+          set: (e: ChangeEvent<HTMLInputElement>) => setQuality(e.target.value),
+          get: quality,
+        },
+      },
+      {
         title: 'Семейство',
         icon: {
           symbol: '"?"',
@@ -57,7 +71,7 @@ export const NodeForm: FC<NodeFormProps> = ({
         },
         input: {
           placeholder: '',
-          ref: 2,
+          ref: 3,
           set: (e: ChangeEvent<HTMLInputElement>) => setFamily(e.target.value),
           get: family,
         },
@@ -71,7 +85,7 @@ export const NodeForm: FC<NodeFormProps> = ({
         },
         input: {
           placeholder: '',
-          ref: 3,
+          ref: 4,
           set: (e: ChangeEvent<HTMLInputElement>) => setAnchor(e.target.value),
           get: anchor,
         },
@@ -85,18 +99,19 @@ export const NodeForm: FC<NodeFormProps> = ({
         },
         input: {
           placeholder: '',
-          ref: 4,
+          ref: 5,
           set: (e: ChangeEvent<HTMLInputElement>) => setBinding(e.target.value),
           get: binding,
         },
       },
     ],
-    [name, family, anchor, binding],
+    [name, quality, family, anchor, binding],
   )
 
   useEffect(() => {
     if (node) {
       setName(node.name)
+      setQuality(node.quality || '')
       setFamily(node.family.join(' '))
       setAnchor(node.anchor.join(' '))
       setBinding(node.binding.join(' '))
@@ -104,6 +119,7 @@ export const NodeForm: FC<NodeFormProps> = ({
       setColor(node.color || '#ff0000')
     } else {
       setName('')
+      setQuality('')
       setFamily('')
       setAnchor('')
       setBinding('')
@@ -114,6 +130,7 @@ export const NodeForm: FC<NodeFormProps> = ({
 
   const reset = () => {
     setName('')
+    setQuality('')
     setFamily('')
     setAnchor('')
     setBinding('')
@@ -165,6 +182,7 @@ export const NodeForm: FC<NodeFormProps> = ({
       join: node ? node.join : [],
       size: node ? node.size : 5,
       name: localName[0].toUpperCase() + localName.slice(1),
+      quality: quality.trim(),
       family: families,
       anchor: anchors,
       binding: bindings,
