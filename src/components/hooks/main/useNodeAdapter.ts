@@ -24,6 +24,10 @@ export const useNodeAdapter = (node: Partial<NodeType>) => {
     if (key === 'z') {
       template[key] = 0
     }
+    // Защита от NaN значений для координат
+    if ((key === 'x' || key === 'y' || key === 'z') && (typeof template[key] !== 'number' || isNaN(template[key]))) {
+      template[key] = 0
+    }
   }
   return template
 }

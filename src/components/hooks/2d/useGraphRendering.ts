@@ -115,14 +115,16 @@ export function useGraphRendering(
     // Функция обновления позиций элементов
     const ticked = () => {
       linkElements
-        .attr('x1', (d) => d.source.x)
-        .attr('y1', (d) => d.source.y)
-        .attr('x2', (d) => d.target.x)
-        .attr('y2', (d) => d.target.y)
+        .attr('x1', (d) => d.source.x || 0)
+        .attr('y1', (d) => d.source.y || 0)
+        .attr('x2', (d) => d.target.x || 0)
+        .attr('y2', (d) => d.target.y || 0)
 
-      nodeElements.attr('cx', (d) => d.x).attr('cy', (d) => d.y)
+      nodeElements
+        .attr('cx', (d) => d.x || 0)
+        .attr('cy', (d) => d.y || 0)
 
-      textElements.attr('x', (d) => d.x).attr('y', (d) => d.y + 10)
+      textElements.attr('x', (d) => d.x || 0).attr('y', (d) => (d.y || 0) + 10)
     }
 
     // Функции для drag & drop

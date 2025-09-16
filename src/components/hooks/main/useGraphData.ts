@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { GraphData, NodeType } from '../../types/graph.ts'
 import Save from '@/lib/Save.ts'
 import { useNodeAdapter } from '@/components/hooks/main/useNodeAdapter.ts'
@@ -7,11 +7,16 @@ import { GraphDataAdapter } from '@/lib/adapter/GraphData.ts'
 
 export type UseGraphData = ReturnType<typeof useGraphData>
 export function useGraphData() {
-  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] })
+  const [graphData, _setGraphData] = useState<GraphData>({ nodes: [], links: [] })
   const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: window.innerWidth || 1,
+    height: window.innerHeight || 1,
   })
+
+  const setGraphData = (v) => {
+    window._graphData = v
+    _setGraphData(v)
+  }
 
   const familyList = useMemo(() => {
     return [...new Set(graphData.nodes.flatMap((node) => node.family))]
@@ -55,7 +60,7 @@ export function useGraphData() {
   // Коррекция позиций происходит только при загрузке данных из localStorage
 
   const saveData = (data?: GraphData) => {
-    const temp = data || graphData
+    const temp = data ? { ...data } : { ...graphData }
     temp.nodes = uniqArrByKey<NodeType>(temp.nodes, 'id')
     Save.toStorage(temp)
   }
@@ -99,9 +104,10 @@ export function useGraphData() {
   }
 
   const addNode = (updatedNode: NodeType) => {
+    updatedNode = useNodeAdapter(updatedNode)
     updatedNode.isCentral = !graphData.nodes.length
-    updatedNode.x = width / 2
-    updatedNode.y = height / 2
+    updatedNode.x = windowSize.width / 2
+    updatedNode.y = windowSize.height / 2
     updatedNode.z = Math.random() * 200 - 100
     const newData = { ...graphData, nodes: [...graphData.nodes, updatedNode] }
     updateLinks(newData)
@@ -111,7 +117,18 @@ export function useGraphData() {
 
   const editNode = (updatedNode: NodeType) => {
     const newData = { ...graphData }
-    newData.nodes = newData.nodes.map((n) => (n.id === updatedNode.id ? updatedNode : n))
+    updatedNode = useNodeAdapter(updatedNode)
+    
+    // ВАЖНО: Обновляем существующий объект вместо замены, чтобы сохранить ссылки D3
+    newData.nodes = newData.nodes.map((n) => {
+      if (n.id === updatedNode.id) {
+        // Обновляем свойства существующего объекта, сохраняя ссылку
+        Object.assign(n, updatedNode)
+        return n
+      }
+      return n
+    })
+    
     updateLinks(newData)
     setGraphData(newData)
     saveData(newData)
@@ -128,6 +145,13 @@ export function useGraphData() {
   // Обновление связей на основе семейств
   const updateLinks = (data: GraphData) => {
     const links: any[] = []
+    // Защита от NaN координат перед созданием связей
+    data.nodes.forEach(node => {
+      if (typeof node.x !== 'number' || isNaN(node.x)) node.x = 0
+      if (typeof node.y !== 'number' || isNaN(node.y)) node.y = 0
+      if (typeof node.z !== 'number' || isNaN(node.z)) node.z = 0
+    })
+    
     data.nodes.forEach((nodeI, i) => {
       nodeI.join = []
       for (let j = i + 1; j < data.nodes.length; j++) {

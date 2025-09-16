@@ -64,6 +64,17 @@ export function useGraphSimulation(graphData: GraphData, width: number, height: 
   useEffect(() => {
     if (!simulationRef.current) return
     calculateZCoordinates(graphData.nodes)
+    
+    // Проверяем узлы перед передачей в симуляцию
+    graphData.nodes.forEach(node => {
+      if (typeof node.x !== 'number' || isNaN(node.x)) {
+        node.x = 0
+      }
+      if (typeof node.y !== 'number' || isNaN(node.y)) {
+        node.y = 0
+      }
+    })
+    
     simulationRef.current.nodes(graphData.nodes)
 
     const linkForce = simulationRef.current.force('link') as d3.ForceLink<any, any>

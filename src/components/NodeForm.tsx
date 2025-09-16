@@ -160,9 +160,9 @@ export const NodeForm: FC<NodeFormProps> = ({
     }
     const updatedNode: NodeType = {
       id,
-      x: node ? node.x : 0,
-      y: node ? node.y : 0,
-      z: node ? node.z : 0,
+      x: node && typeof node.x === 'number' && !isNaN(node.x) ? node.x : 0,
+      y: node && typeof node.y === 'number' && !isNaN(node.y) ? node.y : 0,
+      z: node && typeof node.z === 'number' && !isNaN(node.z) ? node.z : 0,
       join: node ? node.join : [],
       size: node ? node.size : 5,
       name: localName[0].toUpperCase() + localName.slice(1),
