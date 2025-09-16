@@ -65,6 +65,8 @@ export function useGraphData() {
     temp.nodes = uniqArrByKey<NodeType>(temp.nodes, 'id')
     Save.toStorage(temp)
   }
+  // @ts-ignore
+  window._saveData = saveData
   const saveToFile = () => {
     Save.toFile(graphData)
   }

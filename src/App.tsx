@@ -7,6 +7,7 @@ import type { NodeType } from './components/types/graph'
 import { useGraphData } from '@/components/hooks/main/useGraphData.ts'
 import { Settings } from '@/components/Settings.tsx'
 import { SearchBar } from '@/components/SearchBar.tsx'
+import '@/lib/globalUtils'
 
 const FamilyList: FC<{ list: string[]; className?: string }> = ({ list, className }) => {
   const [showFamilyList, setFamilyList] = useState<boolean>(false)

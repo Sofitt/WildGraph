@@ -164,18 +164,36 @@ export const NodeForm: FC<NodeFormProps> = ({
     const regex = /^Руна\s+"(?:[^"\\]|\\.)*"$/
     // console.log(regex.test('Руна "Обретения свой"')); // true
 
-    if (!regex.test(localName)) {
-      const formattedName = localName.toLowerCase().split(' ').join('_')
-      if (!anchors.includes(formattedName)) {
-        anchors.unshift(formattedName)
-      }
-    }
-
     let id
     if (mode === 'add') {
       id = graphData.nodes.length ? Math.max(...graphData.nodes.map((node) => node.id)) + 1 : 1
     } else {
       id = (node as NodeType).id
+    }
+
+    if (!regex.test(localName)) {
+      const formattedName = localName.toLowerCase().split(' ').join('_')
+
+      // Ищем узлы с таким же именем для определения порталов
+      const sameNameNodes = graphData.nodes.filter(
+        (n) => n.name.toLowerCase() === localName.toLowerCase() && n.id !== id,
+      )
+
+      let finalFormattedName
+      if (sameNameNodes.length > 0) {
+        // Если есть узлы с таким же именем, создаем стабильный суффикс на основе ID
+        const suffix = id
+        finalFormattedName = `${formattedName}_${suffix}`
+      } else {
+        // Если узлов с таким же именем нет, suffix = 0
+        finalFormattedName = `${formattedName}_0`
+      }
+      if (!anchors.includes(formattedName)) {
+        anchors.unshift(formattedName)
+      }
+      if (!anchors.includes(finalFormattedName)) {
+        anchors.unshift(finalFormattedName)
+      }
     }
     const updatedNode: NodeType = {
       id,
