@@ -161,7 +161,10 @@ export const NodeForm: FC<NodeFormProps> = ({
     const bindings = transform(binding, ' ', true)
     const notes = transform(note, '\n')
 
-    if (!/\(\w*\)/.test(localName)) {
+    const regex = /^Руна\s+"(?:[^"\\]|\\.)*"$/
+    // console.log(regex.test('Руна "Обретения свой"')); // true
+
+    if (!regex.test(localName)) {
       const formattedName = localName.toLowerCase().split(' ').join('_')
       if (!anchors.includes(formattedName)) {
         anchors.unshift(formattedName)
