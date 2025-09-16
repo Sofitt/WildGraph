@@ -282,7 +282,7 @@ export function useGraphRendering(
       q.toLowerCase(),
     )
     const targetNode = graphData.nodes.find((n) =>
-      queries.every((q) => n.family.some((f) => f.toLowerCase().includes(q))),
+      queries.every((q) => n.name.toLowerCase().includes(q)),
     )
 
     if (targetNode && targetNode.x !== undefined && targetNode.y !== undefined) {

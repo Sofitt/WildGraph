@@ -71,6 +71,7 @@ function App() {
       <SearchBar
         className='max-2xl:hidden absolute top-4 left-1/2 -translate-x-1/2'
         emitter={setQuery}
+        nodes={graphData.nodes}
       />
       <Settings />
       {is3D ? (
@@ -86,7 +87,7 @@ function App() {
           saveToFile={saveToFile}
           loadFromFile={loadFromFile}
         />
-        <SearchBar className='2xl:!hidden pointer-events-auto' emitter={setQuery} />
+        <SearchBar className='2xl:!hidden pointer-events-auto' emitter={setQuery} nodes={graphData.nodes} />
         <FamilyList list={familyList} className='pointer-events-auto' />
         {nodeFormVisible && (
           <NodeForm
