@@ -13,9 +13,10 @@ export function useGraphData() {
     height: window.innerHeight || 1,
   })
 
-  const setGraphData = (v) => {
-    window._graphData = v
-    _setGraphData(v)
+  const setGraphData = (data: GraphData) => {
+    // @ts-ignore
+    window._graphData = data
+    _setGraphData(data)
   }
 
   const familyList = useMemo(() => {
@@ -118,7 +119,7 @@ export function useGraphData() {
   const editNode = (updatedNode: NodeType) => {
     const newData = { ...graphData }
     updatedNode = useNodeAdapter(updatedNode)
-    
+
     // ВАЖНО: Обновляем существующий объект вместо замены, чтобы сохранить ссылки D3
     newData.nodes = newData.nodes.map((n) => {
       if (n.id === updatedNode.id) {
@@ -128,7 +129,7 @@ export function useGraphData() {
       }
       return n
     })
-    
+
     updateLinks(newData)
     setGraphData(newData)
     saveData(newData)
@@ -146,12 +147,12 @@ export function useGraphData() {
   const updateLinks = (data: GraphData) => {
     const links: any[] = []
     // Защита от NaN координат перед созданием связей
-    data.nodes.forEach(node => {
+    data.nodes.forEach((node) => {
       if (typeof node.x !== 'number' || isNaN(node.x)) node.x = 0
       if (typeof node.y !== 'number' || isNaN(node.y)) node.y = 0
       if (typeof node.z !== 'number' || isNaN(node.z)) node.z = 0
     })
-    
+
     data.nodes.forEach((nodeI, i) => {
       nodeI.join = []
       for (let j = i + 1; j < data.nodes.length; j++) {

@@ -55,7 +55,7 @@ export function useGraphRendering(
     if (!svgRef.current || !simulationRef.current) return
 
     const svg = d3.select(svgRef.current)
-    let group = svg.select<SVGGElement>('g#graphGroup')
+    const group = svg.select<SVGGElement>('g#graphGroup')
 
     // Очищаем только при изменении данных графа
     group.selectAll('*').remove()
@@ -120,9 +120,7 @@ export function useGraphRendering(
         .attr('x2', (d) => d.target.x || 0)
         .attr('y2', (d) => d.target.y || 0)
 
-      nodeElements
-        .attr('cx', (d) => d.x || 0)
-        .attr('cy', (d) => d.y || 0)
+      nodeElements.attr('cx', (d) => d.x || 0).attr('cy', (d) => d.y || 0)
 
       textElements.attr('x', (d) => d.x || 0).attr('y', (d) => (d.y || 0) + 10)
     }
@@ -176,7 +174,7 @@ export function useGraphRendering(
             }
           }
         }
-
+        // @ts-ignore
         onNodeHoverRef.current(d, mouseEvent)
       }
     }
