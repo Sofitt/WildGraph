@@ -294,17 +294,20 @@ export function useGraphRendering(
         .translate(-targetNode.x, -targetNode.y)
 
       // Применяем трансформацию напрямую к группе с анимацией
-      group.transition()
+      group
+        .transition()
         .duration(750)
         .attr('transform', newTransform.toString())
         .on('end', () => {
           // Сохраняем новую трансформацию
           zoomTransformRef.current = newTransform
-          
+
           // Синхронизируем zoom behavior с новой трансформацией
           // Получаем zoom behavior из SVG и обновляем его внутреннее состояние
+          // @ts-ignore
           const zoomBehavior = svg.node().__zoom
           if (zoomBehavior) {
+            // @ts-ignore
             svg.node().__zoom = newTransform
           }
         })
