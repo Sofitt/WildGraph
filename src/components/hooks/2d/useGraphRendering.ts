@@ -13,6 +13,7 @@ export function useGraphRendering(
   searchQuery: string[],
   onNodeHover?: (node: NodeType | null, event?: MouseEvent) => void,
   externalZoomTransformRef?: React.MutableRefObject<d3.ZoomTransform | null>,
+  isPortalNode?: (nodeId: number) => boolean,
 ) {
   const localZoomTransformRef = useRef<d3.ZoomTransform | null>(null)
   const zoomTransformRef = externalZoomTransformRef || localZoomTransformRef
@@ -100,6 +101,19 @@ export function useGraphRendering(
       .attr('r', (d) => d.size)
       .attr('fill', (d) => d.color)
 
+    // Создание пульсирующих колец для портальных узлов
+    const portalRings = group
+      .selectAll('.portal-ring')
+      .data(graphData.nodes.filter((d) => (isPortalNode ? isPortalNode(d.id) : false)))
+      .enter()
+      .append('circle')
+      .attr('class', 'portal-ring')
+      .attr('r', (d) => d.size + 4)
+      .attr('fill', 'none')
+      .attr('stroke', '#00bcd4')
+      .attr('stroke-width', 2)
+      .attr('opacity', 0.5)
+
     // Создание текстовых меток
     const textElements = group
       .selectAll('.nodelabel')
@@ -121,6 +135,8 @@ export function useGraphRendering(
         .attr('y2', (d) => d.target.y || 0)
 
       nodeElements.attr('cx', (d) => d.x || 0).attr('cy', (d) => d.y || 0)
+
+      portalRings.attr('cx', (d) => d.x || 0).attr('cy', (d) => d.y || 0)
 
       textElements.attr('x', (d) => d.x || 0).attr('y', (d) => (d.y || 0) + 10)
     }
@@ -258,6 +274,9 @@ export function useGraphRendering(
         .attr('y2', (d: any) => d.target.y)
 
       nodeElements.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y)
+
+      const portalRings = group.selectAll('.portal-ring')
+      portalRings.attr('cx', (d: any) => d.x).attr('cy', (d: any) => d.y)
 
       textElements.attr('x', (d: any) => d.x).attr('y', (d: any) => d.y + 10)
     }

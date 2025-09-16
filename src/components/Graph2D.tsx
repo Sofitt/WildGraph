@@ -8,6 +8,7 @@ import { useGraphRendering } from '@/components/hooks/2d/useGraphRendering'
 import { type NodeType } from './types/graph'
 import { usePortals, PortalConnection } from './hooks/usePortals'
 import PortalMenu from './PortalMenu'
+import '@/components/style/portal-rings.css'
 
 type Props = {
   onEditNode: (node: NodeType | null) => void
@@ -102,37 +103,40 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
     [isPortalNode, getPortalConnections],
   )
 
-  const moveToNode = useCallback((targetNode: NodeType) => {
-    if (!svgRef.current || !targetNode.x || !targetNode.y) return
+  const moveToNode = useCallback(
+    (targetNode: NodeType) => {
+      if (!svgRef.current || !targetNode.x || !targetNode.y) return
 
-    const svg = d3.select(svgRef.current)
-    const group = svg.select('g#graphGroup')
+      const svg = d3.select(svgRef.current)
+      const group = svg.select('g#graphGroup')
 
-    // Вычисляем новую трансформацию для центрирования узла
-    const scale = zoomTransformRef.current?.k || 1
-    const newTransform = d3.zoomIdentity
-      .translate(width / 2, height / 2)
-      .scale(scale)
-      .translate(-targetNode.x, -targetNode.y)
+      // Вычисляем новую трансформацию для центрирования узла
+      const scale = zoomTransformRef.current?.k || 1
+      const newTransform = d3.zoomIdentity
+        .translate(width / 2, height / 2)
+        .scale(scale)
+        .translate(-targetNode.x, -targetNode.y)
 
-    // Применяем трансформацию напрямую к группе с анимацией
-    group
-      .transition()
-      .duration(750)
-      .attr('transform', newTransform.toString())
-      .on('end', () => {
-        // Сохраняем новую трансформацию
-        zoomTransformRef.current = newTransform
+      // Применяем трансформацию напрямую к группе с анимацией
+      group
+        .transition()
+        .duration(750)
+        .attr('transform', newTransform.toString())
+        .on('end', () => {
+          // Сохраняем новую трансформацию
+          zoomTransformRef.current = newTransform
 
-        // Синхронизируем zoom behavior с новой трансформацией
-        // @ts-ignore
-        const zoomBehavior = svg.node().__zoom
-        if (zoomBehavior) {
+          // Синхронизируем zoom behavior с новой трансформацией
           // @ts-ignore
-          svg.node().__zoom = newTransform
-        }
-      })
-  }, [width, height])
+          const zoomBehavior = svg.node().__zoom
+          if (zoomBehavior) {
+            // @ts-ignore
+            svg.node().__zoom = newTransform
+          }
+        })
+    },
+    [width, height],
+  )
 
   const handlePortalSelect = useCallback(
     (nodeId: number) => {
@@ -184,6 +188,7 @@ const Graph2D: FC<Props> = ({ onEditNode, graphUse, searchQuery }) => {
     searchQuery,
     handleNodeHover,
     zoomTransformRef,
+    isPortalNode,
   )
 
   return (

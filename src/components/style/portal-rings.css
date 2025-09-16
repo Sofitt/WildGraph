@@ -1,0 +1,20 @@
+@keyframes portal-pulse-opacity {
+  0% {
+    opacity: 0.3;
+    stroke-width: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+    stroke-width: 3;
+  }
+
+  100% {
+    opacity: 0.3;
+    stroke-width: 1;
+  }
+}
+
+.portal-ring {
+  animation: portal-pulse-opacity 2s ease-in-out infinite;
+}
